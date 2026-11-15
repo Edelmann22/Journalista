@@ -1,0 +1,42 @@
+/**
+ * Responsive · small screens and reduced motion
+ * =============================================
+ *
+ * Media queries. Loaded last so they win over every other stylesheet.
+ */
+
+@media (max-width: 380px) {
+  .lead h1,
+  [data-era="new"] .lead h1 {
+    font-size: 38px;
+  }
+  [data-era="new"] .prompt h2 {
+    font-size: 34px;
+  }
+}
+@media (max-width: 380px) {
+  .lead h1 {
+    font-size: 29px;
+  }
+  .prompt h2 {
+    font-size: 26px;
+  }
+  .marks {
+    grid-template-columns: 1fr;
+  }
+  .roomcode {
+    font-size: 52px;
+  }
+  .set {
+    grid-template-columns: 1fr;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .shake,
+  .verdict.pop .rate {
+    animation: none;
+  }
+  body {
+    transition: none;
+  }
+}

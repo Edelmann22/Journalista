@@ -1,0 +1,140 @@
+/**
+ * Base · reset, typography and utility classes
+ * ============================================
+ *
+ * Global element defaults (box sizing, body type, focus rings) and the small
+ * set of reusable utility classes shared by every screen.
+ */
+
+* {
+  box-sizing: border-box;
+}
+html,
+body {
+  height: 100%;
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--body);
+  font-size: 17px;
+  line-height: 1.45;
+  transition:
+    background-color 0.35s,
+    color 0.35s;
+}
+[data-era="old"] body {
+  background-image: radial-gradient(rgba(60, 40, 10, 0.07) 1px, transparent 1.2px);
+  background-size: 5px 5px;
+}
+.wrap {
+  max-width: 600px;
+  margin: 0 auto;
+  padding: 14px 16px 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+h1,
+h2,
+h3,
+p {
+  margin: 0;
+}
+h1,
+h2,
+.h {
+  font-family: var(--display);
+  font-weight: 800;
+  letter-spacing: var(--head-track);
+  text-wrap: balance;
+}
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible {
+  outline: 3px solid var(--t2);
+  outline-offset: 2px;
+}
+[hidden] {
+  display: none !important;
+}
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.rowx {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.kick {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.small {
+  font-size: 15px;
+  color: var(--ink-2);
+}
+
+/* ---------- spacing and alignment utilities ----------
+   Replace one-off inline styles. Declared after .stack so a gap-* class
+   overrides the default stack gap. */
+.gap-2 {
+  gap: 2px;
+}
+.gap-4 {
+  gap: 4px;
+}
+.gap-6 {
+  gap: 6px;
+}
+.gap-8 {
+  gap: 8px;
+}
+.gap-14 {
+  gap: 14px;
+}
+.gap-16 {
+  gap: 16px;
+}
+.gap-20 {
+  gap: 20px;
+}
+.grow {
+  flex: 1;
+}
+.align-right {
+  text-align: right;
+}
+
+/* ---------- tier colour helpers ----------
+   Set the --c custom property that .rate, .chip and .group read. */
+.tier-1 {
+  --c: var(--t1);
+}
+.tier-2 {
+  --c: var(--t2);
+}
+.tier-3 {
+  --c: var(--t3);
+}
+.tier-4 {
+  --c: var(--t4);
+}

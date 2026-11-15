@@ -1,0 +1,460 @@
+<!doctype html>
+<!--
+  Journalista · Football trivia
+  =============================
+  The page markup. Every screen of the game is one <main> view below; only one
+  is visible at a time (see show() in js/ui/dom.js).
+
+    #home     front page: room controls, daily seven, section index
+    #room     multiplayer lobby
+    #mp       multiplayer race round in progress
+    #turns    multiplayer Hot seat round in progress
+    #mpboard  multiplayer scoreboard after each round
+    #play     solo match (one prompt at a time)
+    #result   solo full-time results
+
+  Styles live in css/, behaviour in js/. See README.md for the full map.
+-->
+<html lang="en" data-era="new">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Journalista Football Trivia</title>
+    <meta
+      name="description"
+      content="Football trivia for people who know the game like a journalist. Rarer answers make the front page. Play alone or race friends with a room code."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=Newsreader:opsz,wght@6..72,400;6..72,700&family=Old+Standard+TT:ital,wght@0,400;0,700;1,400&family=Playfair+Display:wght@800;900&family=UnifrakturMaguntia&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+
+    <!-- Styles: order matters, later files override earlier ones -->
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/base.css" />
+    <link rel="stylesheet" href="css/components.css" />
+    <link rel="stylesheet" href="css/screens.css" />
+    <link rel="stylesheet" href="css/newspaper.css" />
+    <link rel="stylesheet" href="css/effects.css" />
+    <link rel="stylesheet" href="css/responsive.css" />
+  </head>
+  <body>
+    <div class="wrap">
+      <header class="mast">
+        <button
+          class="title"
+          id="homeBtn"
+          type="button"
+          aria-label="Journalista, back to front page"
+        >
+          Journalista
+        </button>
+        <div class="dateline">
+          <span id="dl"></span>
+          <span class="eratag" id="eraTag">Football edition</span>
+          <span class="num" id="edNo"></span>
+        </div>
+      </header>
+
+      <!-- ============================================================
+           VIEW · Home
+           Front page: ticker, editor, your reporter, create/join room, daily seven, sections.
+           Logic: js/modes/solo.js (renderHome), js/ui/home.js, js/modes/multiplayer.js (rooms)
+           ============================================================ -->
+      <main id="home" class="stack gap-20">
+        <div class="ticker" aria-hidden="true">
+          <span class="ticker-tag">Latest</span>
+          <div class="ticker-win"><div class="ticker-track" id="ticker"></div></div>
+        </div>
+
+        <section class="lead stack gap-8">
+          <span class="kick spot">Front page</span>
+          <h1>Know football like the best journalist in the press box.</h1>
+          <p>
+            Every question has dozens of right answers. Anyone can file the obvious one. The names
+            only a real reporter remembers make the front page. Race your friends to the deadline or
+            work today's seven alone.
+          </p>
+          <span class="byline">By our football desk</span>
+          <div class="editor">
+            <button class="editor-btn" id="editorBtn" type="button" aria-label="Another tip">
+              <img class="avatar av-lg bob" id="editorAv" alt="" width="16" height="16" />
+            </button>
+            <div class="bubble" id="edSay"></div>
+          </div>
+        </section>
+
+        <section class="card stack">
+          <span class="kick spot">Newsroom · play with friends</span>
+          <div class="me-row">
+            <button
+              class="me-btn"
+              id="reroll"
+              type="button"
+              aria-label="Give your reporter a new look"
+            >
+              <img class="avatar av-lg" id="meAv" alt="" width="16" height="16" />
+              <span class="me-tag">New look</span>
+            </button>
+            <div class="field grow">
+              <label class="small" for="name">Your name</label>
+              <input
+                type="text"
+                id="name"
+                maxlength="14"
+                placeholder="e.g. Stoichkov"
+                autocomplete="nickname"
+              />
+            </div>
+          </div>
+          <button class="btn" id="create" type="button">Create a room</button>
+          <div class="rowx">
+            <input
+              type="text"
+              id="code"
+              maxlength="4"
+              placeholder="CODE"
+              autocapitalize="characters"
+              autocomplete="off"
+              aria-label="Room code"
+            />
+            <button class="ghost grow" id="join" type="button">Join with code</button>
+          </div>
+          <p class="small" id="homeMsg" role="status" aria-live="polite"></p>
+        </section>
+
+        <section class="stack">
+          <span class="kick" id="edition">Play alone</span>
+          <button class="ghost" id="kick" type="button">Play today's seven</button>
+          <p class="small" id="homeNote"></p>
+        </section>
+
+        <section class="stack gap-4">
+          <span class="kick">Inside the paper · practice by section</span>
+          <div id="index"></div>
+        </section>
+
+        <section class="stack">
+          <span class="kick">How your copy is rated</span>
+          <div class="marks">
+            <div class="mark tier-1">
+              <div class="rate">6</div>
+              <b>Wire copy · 100</b>
+              <span>What every paper prints</span>
+            </div>
+            <div class="mark tier-2">
+              <div class="rate">7</div>
+              <b>Good line · 200</b>
+              <span>Solid, less obvious</span>
+            </div>
+            <div class="mark tier-3">
+              <div class="rate">8</div>
+              <b>Back page · 350</b>
+              <span>Few reporters have it</span>
+            </div>
+            <div class="mark tier-4">
+              <div class="rate">10</div>
+              <b>Front page · 500</b>
+              <span>The story nobody else has</span>
+            </div>
+          </div>
+          <p class="small">
+            Questions about football since 2010 are printed in today's paper. Older ones come from
+            the archive edition.
+          </p>
+        </section>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Room
+           Multiplayer lobby: room code, players, game type, host-only match settings.
+           Logic: js/modes/multiplayer.js (renderRoom)
+           ============================================================ -->
+      <main id="room" class="stack gap-16" hidden>
+        <div class="stack gap-4">
+          <span class="kick">Room code · share it with friends</span>
+          <div class="roomcode" id="roomCode">----</div>
+        </div>
+        <div class="warn" id="localWarn" hidden>
+          Test mode: online play is not connected yet, so this room only works between tabs of this
+          browser. Add your Supabase URL and key in js/config.js to play across devices.
+        </div>
+        <div class="warn" id="hostLost" hidden>
+          Lost contact with the host. Waiting for them to come back.
+        </div>
+        <div class="stack gap-4">
+          <span class="kick" id="pCount">Players</span>
+          <div class="plist" id="plist"></div>
+        </div>
+        <div class="stack gap-6">
+          <span class="kick">Game type</span>
+          <div class="modes">
+            <button class="mode-card" type="button" data-mode="race" aria-pressed="true">
+              <img class="pix-icon" data-icon="watch" alt="" width="8" height="8" />
+              <span class="mc-t">Newsroom race</span>
+              <span class="mc-d">Everyone answers at once. The most copy filed wins.</span>
+            </button>
+            <button class="mode-card" type="button" data-mode="turns" aria-pressed="false">
+              <img class="pix-icon" data-icon="ball" alt="" width="8" height="8" />
+              <span class="mc-t">Hot seat</span>
+              <span class="mc-d">Take turns. Let the clock run out and you lose the round.</span>
+            </button>
+          </div>
+        </div>
+        <div class="stack" id="hostBox">
+          <span class="kick">Match settings</span>
+          <div class="set">
+            <div class="field">
+              <label class="small" for="sRounds">Rounds</label>
+              <select id="sRounds">
+                <option>3</option>
+                <option selected>5</option>
+                <option>7</option>
+                <option>10</option>
+              </select>
+            </div>
+            <div class="field">
+              <label class="small" for="sEra">Questions</label>
+              <select id="sEra">
+                <option value="mix" selected>All eras</option>
+                <option value="new">Modern only</option>
+                <option value="old">Classic only</option>
+              </select>
+            </div>
+            <div class="field" id="fSecs">
+              <label class="small" for="sSecs">Seconds</label>
+              <select id="sSecs">
+                <option>30</option>
+                <option selected>45</option>
+                <option>60</option>
+              </select>
+            </div>
+            <div class="field" id="fTurn" hidden>
+              <label class="small" for="sTurn">Seconds a turn</label>
+              <select id="sTurn">
+                <option>5</option>
+                <option>8</option>
+                <option selected>10</option>
+                <option>15</option>
+              </select>
+            </div>
+          </div>
+          <button class="btn" id="startMp" type="button">Start the match</button>
+        </div>
+        <p class="small" id="roomMsg"></p>
+        <p class="small" id="roomRules"></p>
+        <button class="ghost" id="leave" type="button">Leave room</button>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Multiplayer round
+           One prompt for everyone; type as many answers as possible before the clock stops.
+           Logic: js/modes/multiplayer.js (startRound)
+           ============================================================ -->
+      <main id="mp" class="stack gap-14" hidden>
+        <div class="board">
+          <span class="kick" id="mpCount"></span>
+          <div class="align-right">
+            <span class="kick">This round</span>
+            <div class="score num" id="mpScore">0</div>
+          </div>
+        </div>
+        <div class="clock">
+          <span class="sec-n num" id="mpSec">45</span>
+          <div class="bar"><div class="fill" id="mpFill"></div></div>
+        </div>
+        <div class="prompt stack gap-6" id="mpCard">
+          <h2 id="mpText"></h2>
+          <p id="mpSub"></p>
+        </div>
+        <form id="mpForm" autocomplete="off">
+          <input
+            type="text"
+            id="mpAnswer"
+            placeholder="Type an answer, press enter"
+            autocapitalize="words"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="send"
+            aria-label="Your answer"
+          />
+          <button class="btn" type="button">Submit</button>
+        </form>
+        <div class="say" id="mpSay" role="status" aria-live="polite"></div>
+        <div class="chips" id="mpMine"></div>
+        <div class="stack gap-6">
+          <span class="kick">Live</span>
+          <div class="live" id="mpLive"></div>
+        </div>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Hot seat round
+           Players take turns; the ball shows whose clock is running. Run out of time and lose.
+           Logic: js/modes/turns.js (turnsApply)
+           ============================================================ -->
+      <main id="turns" class="stack gap-14" hidden>
+        <div class="board">
+          <span class="kick" id="tCount"></span>
+          <div class="align-right">
+            <span class="kick">Your copy</span>
+            <div class="score num" id="tScore">0</div>
+          </div>
+        </div>
+        <div class="seats" id="tSeats"></div>
+        <div class="turn-banner" id="tBanner" role="status" aria-live="polite"></div>
+        <div class="clock">
+          <span class="sec-n num" id="tSec">10</span>
+          <div class="bar"><div class="fill" id="tFill"></div></div>
+        </div>
+        <div class="prompt stack gap-6" id="tCard">
+          <h2 id="tText"></h2>
+          <p id="tSub"></p>
+        </div>
+        <form id="tForm" autocomplete="off">
+          <input
+            type="text"
+            id="tAnswer"
+            placeholder="Wait for your turn"
+            autocapitalize="words"
+            autocorrect="off"
+            spellcheck="false"
+            enterkeyhint="send"
+            aria-label="Your answer"
+          />
+          <button class="btn" type="button">File it</button>
+        </form>
+        <div class="say" id="tSay" role="status" aria-live="polite"></div>
+        <div class="stack gap-6">
+          <span class="kick">Filed this round</span>
+          <div class="chips" id="tUsed"></div>
+        </div>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Multiplayer scoreboard
+           Standings after each round, plus every answer and who found it.
+           Logic: js/modes/multiplayer.js (showBoard)
+           ============================================================ -->
+      <main id="mpboard" class="stack gap-16" hidden>
+        <div class="stack gap-4">
+          <span class="kick" id="bMeta"></span>
+          <h2 id="bHead"></h2>
+        </div>
+        <div id="bRanks"></div>
+        <button class="btn" id="bNext" type="button">Next round</button>
+        <p class="small" id="bWait"></p>
+        <div class="stack gap-6">
+          <span class="kick">The prompt</span>
+          <p class="h" id="bPrompt"></p>
+        </div>
+        <div class="stack" id="bGroups"></div>
+        <button class="ghost" id="bLeave" type="button">Leave room</button>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Solo match
+           One prompt at a time: the #ask panel while the clock runs, then the #reveal verdict.
+           Logic: js/modes/solo.js (ask, settle)
+           ============================================================ -->
+      <main id="play" class="stack gap-14" hidden>
+        <div class="board">
+          <div class="rowx">
+            <img class="avatar av-lg" id="soloAv" alt="" width="16" height="16" />
+            <div class="stack gap-2">
+              <span class="kick" id="qCount"></span>
+              <span class="kick" id="qCat"></span>
+            </div>
+          </div>
+          <div class="align-right">
+            <span class="kick">Score</span>
+            <div class="score num" id="score">0</div>
+          </div>
+        </div>
+        <div class="pips" id="pips"></div>
+        <div id="ask" class="stack gap-14">
+          <div class="clock">
+            <span class="sec-n num" id="sec">25</span>
+            <div class="bar"><div class="fill" id="fill"></div></div>
+          </div>
+          <div class="prompt stack gap-6" id="card">
+            <h2 id="qText"></h2>
+            <p id="qSub"></p>
+          </div>
+          <form id="form" autocomplete="off">
+            <input
+              type="text"
+              id="answer"
+              placeholder="Your answer"
+              autocapitalize="words"
+              autocorrect="off"
+              spellcheck="false"
+              enterkeyhint="go"
+              aria-label="Your answer"
+            />
+            <button class="btn" type="button">Submit</button>
+          </form>
+          <div class="say" id="say" role="status" aria-live="polite"></div>
+          <button class="ghost" id="skip" type="button">Skip this prompt</button>
+        </div>
+        <div id="reveal" class="stack gap-14" hidden>
+          <p class="h" id="rText"></p>
+          <div class="verdict card" id="verdict">
+            <div class="rate" id="vRate"></div>
+            <div>
+              <div class="k" id="vKind"></div>
+              <div class="a" id="vAns"></div>
+            </div>
+            <div class="pts num" id="vPts"></div>
+          </div>
+          <button class="btn" id="next" type="button">Next prompt</button>
+          <div class="stack" id="groups"></div>
+        </div>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Solo results
+           Final score, newsroom rank, per-prompt breakdown and share button.
+           Logic: js/modes/solo.js (renderResult)
+           ============================================================ -->
+      <main id="result" class="stack gap-16" hidden>
+        <div class="stack gap-6">
+          <span class="kick" id="resMeta"></span>
+          <div class="res-head">
+            <div class="big num" id="resScore">0</div>
+            <img class="avatar av-xl" id="resAv" alt="" width="16" height="16" />
+          </div>
+          <h2 id="resRank"></h2>
+          <p class="small" id="resLine"></p>
+        </div>
+        <div id="resRows"></div>
+        <button class="btn" id="share" type="button">Copy result</button>
+        <textarea id="shareBox" rows="4" readonly hidden aria-label="Result text"></textarea>
+        <button class="ghost" id="again" type="button">Play a practice round</button>
+        <button class="ghost" id="back" type="button">Back to start</button>
+      </main>
+    </div>
+
+    <!-- Scripts: classic scripts sharing one global scope, loaded in dependency order -->
+    <script src="js/config.js"></script>
+    <script src="js/data/clubs.js"></script>
+    <script src="js/data/questions-core.js"></script>
+    <script src="js/data/questions-expanded.js"></script>
+    <script src="js/data/questions-new-sections.js"></script>
+    <script src="js/data/eras.js"></script>
+    <script src="js/core/rules.js"></script>
+    <script src="js/core/matching.js"></script>
+    <script src="js/core/storage.js"></script>
+    <script src="js/core/utils.js"></script>
+    <script src="js/ui/dom.js"></script>
+    <script src="js/ui/pixels.js"></script>
+    <script src="js/ui/effects.js"></script>
+    <script src="js/ui/home.js"></script>
+    <script src="js/modes/solo.js"></script>
+    <script src="js/modes/multiplayer.js"></script>
+    <script src="js/modes/turns.js"></script>
+    <script src="js/main.js"></script>
+  </body>
+</html>

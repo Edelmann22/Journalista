@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(awk '{ printf \"%d\\\\t%d\\\\t%s\\\\n\", NR, length\\($0\\), substr\\($0,1,140\\) }' index.html)",
+      "Bash(which node *)",
+      "Read(//home/speranza/.npm/_npx/**)",
+      "Bash(awk 'NR>=370 && NR<=688 { printf \"%d\\\\t%s\\\\n\", NR, substr\\($0,1,150\\) }' index.html)",
+      "Bash(awk '/^ \\\\*\\\\/$/{p=1;next} p' js/modes/solo.js)",
+      "Bash(grep -nE '^\\(function|const|let|wire|\\\\$|async|\\\\[|[a-zA-Z]\\)')",
+      "Bash(awk '/^ \\\\*\\\\/$/{p=1;next} p' js/modes/multiplayer.js)",
+      "Bash(grep -nE '^\\(function|const|let|wire|\\\\$|async|window|\\\\[|[a-zA-Z]\\)')",
+      "Bash(timeout 300 node browser.js __TRACKED_VAR__/index.original.html __TRACKED_VAR__/out/index.html)",
+      "Bash(node -)",
+      "Bash(timeout 240 node e2e.js /home/speranza/Desktop/Projects/Claude/Journalista/index.html __TRACKED_VAR__/shots)"
+    ],
+    "additionalDirectories": [
+      "/home/speranza/Desktop/Projects/Claude/Journalista"
+    ]
+  }
+}

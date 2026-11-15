@@ -1,0 +1,115 @@
+/**
+ * Components · masthead, buttons, inputs and cards
+ * ================================================
+ *
+ * Building blocks reused across screens: the masthead/title button, primary
+ * (.btn) and secondary (.ghost) buttons, text inputs, selects and cards.
+ */
+
+/* masthead */
+.mast {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding-bottom: 10px;
+  border-bottom: var(--bw) solid var(--line);
+}
+[data-era="old"] .mast {
+  border-bottom: 4px double var(--line);
+  justify-content: center;
+  flex-direction: column;
+  gap: 2px;
+}
+.title {
+  font-family: var(--mast);
+  font-weight: 800;
+  font-size: var(--mast-size);
+  line-height: 1;
+  background: none;
+  border: 0;
+  padding: 0;
+  letter-spacing: -0.03em;
+}
+[data-era="new"] .title i {
+  font-style: normal;
+  color: var(--accent);
+}
+[data-era="old"] .title {
+  font-weight: 400;
+  letter-spacing: 0;
+}
+[data-era="old"] .title i {
+  font-style: normal;
+}
+.eratag {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border: var(--bw) solid var(--line);
+  border-radius: 999px;
+  padding: 4px 10px;
+  color: var(--ink-2);
+}
+[data-era="old"] .eratag {
+  border: 0;
+  border-radius: 0;
+  font-style: italic;
+  letter-spacing: 0.06em;
+  padding: 0;
+}
+
+/* controls */
+.btn {
+  background: var(--accent);
+  color: var(--on-accent);
+  border: var(--bw) solid var(--accent);
+  border-radius: var(--radius);
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 20px;
+  padding: 14px 18px;
+  text-align: center;
+}
+.btn:active {
+  filter: brightness(0.9);
+}
+.btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.ghost {
+  background: none;
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  font-weight: 700;
+  padding: 12px 14px;
+}
+.ghost:active {
+  background: var(--panel);
+}
+input[type="text"],
+select {
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-weight: 700;
+  min-width: 0;
+}
+input[type="text"]::placeholder {
+  color: var(--ink-2);
+  font-weight: 500;
+}
+.card {
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}

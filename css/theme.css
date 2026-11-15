@@ -1,0 +1,68 @@
+/**
+ * Theme · design tokens for both newspaper eras
+ * =============================================
+ *
+ * Journalista is a newspaper in both eras. Questions about football since
+ * 2010 are set like today's paper: white stock, condensed sans headlines and
+ * one red spot colour. Older questions are printed in the archive edition:
+ * aged paper, a blackletter masthead and old-style serifs.
+ *
+ * The active era is chosen per question by setting data-era="new" or
+ * data-era="old" on <html> (see setEra() in js/ui/dom.js). Every other
+ * stylesheet reads colours, fonts and sizes from the custom properties
+ * declared here, so the whole page restyles itself when the attribute changes.
+ *
+ * Tier colours: --t1 Wire copy · --t2 Good line · --t3 Back page · --t4 Front page
+ */
+
+:root,
+[data-era="new"] {
+  color-scheme: light;
+  --bg: #f7f5ef;
+  --panel: #ffffff;
+  --ink: #111111;
+  --ink-2: #56524b;
+  --line: #111111;
+  --accent: #111111;
+  --on-accent: #f7f5ef;
+  --spot: #c8102e;
+  --t1: #56524b;
+  --t2: #1456a8;
+  --t3: #0a6b46;
+  --t4: #c8102e;
+  --on-tier: #ffffff;
+  --display: "Barlow Condensed", "Arial Narrow", Arial, sans-serif;
+  --body: "Newsreader", Georgia, "Times New Roman", serif;
+  --mast: "Playfair Display", Georgia, serif;
+  --radius: 0px;
+  --bw: 1px;
+  --head-case: none;
+  --head-track: 0;
+  --mast-size: clamp(32px, 10.4vw, 62px);
+  --rule: 3px;
+}
+[data-era="old"] {
+  color-scheme: light;
+  --bg: #e8dcc0;
+  --panel: #f1e8d1;
+  --ink: #1d1912;
+  --ink-2: #5c5240;
+  --line: #1d1912;
+  --accent: #1d1912;
+  --on-accent: #f1e8d1;
+  --t1: #5c5240;
+  --t2: #2c4a68;
+  --t3: #3c5a2a;
+  --t4: #8c1d18;
+  --on-tier: #f1e8d1;
+  --display: "Playfair Display", Georgia, serif;
+  --body: "Old Standard TT", Georgia, "Times New Roman", serif;
+  --mast: "UnifrakturMaguntia", "Playfair Display", Georgia, serif;
+  --radius: 0px;
+  --bw: 1.5px;
+  --head-case: none;
+  --head-track: 0;
+  --mast-size: clamp(46px, 15vw, 84px);
+  --rule: 3px;
+  --spot: #8c1d18;
+}

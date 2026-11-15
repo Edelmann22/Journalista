@@ -1,0 +1,163 @@
+/**
+ * Newspaper · front-page layout shared by both eras
+ * =================================================
+ *
+ * Overrides layered on top of the component and screen styles to give every
+ * view a broadsheet look: centred masthead, dateline, drop cap on the lead,
+ * double-rule cards and the red spot colour. Must load after screens.css.
+ */
+
+[data-era="new"] body {
+  border-top: 6px solid var(--spot);
+}
+[data-era] .mast {
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  gap: 6px;
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+[data-era] .title {
+  width: 100%;
+  text-align: center;
+  font-size: var(--mast-size);
+  white-space: nowrap;
+  overflow: hidden;
+}
+[data-era="new"] .title {
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+.dateline {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 8px;
+  border-top: 4px double var(--line);
+  border-bottom: var(--bw) solid var(--line);
+  padding: 5px 0;
+  font-family: var(--display);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+[data-era] .eratag {
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  font-size: 13px;
+  font-style: normal;
+  letter-spacing: 0.08em;
+  color: var(--spot);
+}
+[data-era="old"] .dateline {
+  font-family: var(--body);
+  font-size: 12px;
+}
+.spot {
+  color: var(--spot);
+}
+.byline {
+  font-style: italic;
+  font-size: 14.5px;
+  color: var(--ink-2);
+}
+.lead h1 {
+  font-size: 40px;
+  line-height: 1.02;
+}
+[data-era="new"] .lead h1 {
+  font-size: 48px;
+  line-height: 0.96;
+}
+.lead p::first-letter {
+  float: left;
+  font-family: var(--mast);
+  font-weight: 900;
+  font-size: 3.05em;
+  line-height: 0.82;
+  padding: 4px 7px 0 0;
+  color: var(--ink);
+}
+.lead p {
+  color: var(--ink);
+}
+.card {
+  background: transparent;
+  border-width: 4px 0 var(--bw);
+  border-style: double solid solid;
+  padding: 14px 0;
+}
+.btn {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+[data-era="new"] .btn {
+  font-size: 23px;
+  padding: 12px 18px;
+}
+[data-era="new"] .kick {
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 0.1em;
+}
+[data-era="new"] .ghost {
+  font-family: var(--display);
+  font-size: 19px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+[data-era="new"] .sec .t {
+  font-size: 25px;
+  line-height: 1;
+  text-transform: uppercase;
+}
+[data-era="new"] .prompt h2 {
+  font-size: 42px;
+  line-height: 0.98;
+}
+[data-era="new"] .h {
+  font-size: 24px !important;
+}
+[data-era="new"] .verdict .k {
+  font-size: 32px;
+  text-transform: uppercase;
+}
+[data-era="new"] .rank .tt,
+[data-era="new"] .row .p {
+  font-size: 28px;
+}
+[data-era="new"] .rate {
+  font-size: 26px;
+}
+[data-era="new"] .verdict .rate {
+  font-size: 44px;
+}
+.verdict.card {
+  border-width: 4px 0;
+  border-style: double;
+  padding: 12px 0;
+}
+.chip,
+.pip,
+.clock .bar,
+.lv .tr {
+  border-radius: 0;
+}
+.rank.first .pos,
+.rank.first .tt {
+  color: var(--spot);
+}
+.clock .sec-n.low,
+.say {
+  color: var(--spot);
+}
+.say.ok {
+  color: var(--t3);
+}
+#index {
+  border-top: var(--bw) solid var(--line);
+}
