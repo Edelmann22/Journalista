@@ -5,7 +5,8 @@
   The page markup. Every screen of the game is one <main> view below; only one
   is visible at a time (see show() in js/ui/dom.js).
 
-    #home     front page: room controls, daily seven, section index
+    #home     front page: room controls, quick match, daily seven, section index
+    #search   quick match: finding a random opponent
     #room     multiplayer lobby
     #mp       multiplayer race round in progress
     #turns    multiplayer Hot seat round in progress
@@ -38,6 +39,7 @@
     <link rel="stylesheet" href="css/screens.css" />
     <link rel="stylesheet" href="css/newspaper.css" />
     <link rel="stylesheet" href="css/effects.css" />
+    <link rel="stylesheet" href="css/quickmatch.css" />
     <link rel="stylesheet" href="css/responsive.css" />
   </head>
   <body>
@@ -125,6 +127,17 @@
           <p class="small" id="homeMsg" role="status" aria-live="polite"></p>
         </section>
 
+        <section class="card stack" id="qmCard">
+          <span class="kick spot">Quick match · race a random reporter</span>
+          <p class="small">
+            Get paired with someone at your level for three rounds of Newsroom race. Uses your name
+            and reporter above.
+          </p>
+          <button class="btn" id="qmFind" type="button">Find an opponent</button>
+          <p class="small" id="qmRecord"></p>
+          <p class="small" id="qmMsg" role="status" aria-live="polite"></p>
+        </section>
+
         <section class="stack">
           <span class="kick" id="edition">Play alone</span>
           <button class="ghost" id="kick" type="button">Play today's seven</button>
@@ -165,6 +178,37 @@
             the archive edition.
           </p>
         </section>
+      </main>
+
+      <!-- ============================================================
+           VIEW · Quick match search
+           Matchmaking: you on the left, the opponent's slot on the right, then a countdown.
+           Logic: js/modes/quickmatch.js (quickSearch, quickFound)
+           ============================================================ -->
+      <main id="search" class="stack gap-16" hidden>
+        <div class="stack gap-4">
+          <span class="kick spot">Quick match · Newsroom race · 3 rounds</span>
+          <h2 id="qsHead">Finding you an opponent</h2>
+        </div>
+        <div class="versus">
+          <div class="vs-side">
+            <img class="avatar av-xl" id="qsMe" alt="" width="16" height="16" />
+            <span class="vs-name" id="qsMeName"></span>
+            <span class="vs-sub">You</span>
+          </div>
+          <span class="vs-mid">vs</span>
+          <div class="vs-side">
+            <img class="avatar av-xl searching" id="qsOpp" alt="" width="16" height="16" />
+            <span class="vs-name" id="qsOppName">?</span>
+            <span class="vs-sub" id="qsOppSub">Searching…</span>
+          </div>
+        </div>
+        <div class="search-bar" aria-hidden="true"><i></i></div>
+        <div class="rowx between">
+          <p class="small grow" id="qsStatus" role="status" aria-live="polite"></p>
+          <span class="kick num" id="qsTime">0:00</span>
+        </div>
+        <button class="ghost" id="qsCancel" type="button">Cancel</button>
       </main>
 
       <!-- ============================================================
@@ -344,7 +388,9 @@
           <h2 id="bHead"></h2>
         </div>
         <div id="bRanks"></div>
+        <div class="chat" id="bChat" hidden></div>
         <button class="btn" id="bNext" type="button">Next round</button>
+        <button class="ghost" id="bNew" type="button" hidden>Find a new opponent</button>
         <p class="small" id="bWait"></p>
         <div class="stack gap-6">
           <span class="kick">The prompt</span>
@@ -455,6 +501,8 @@
     <script src="js/modes/solo.js"></script>
     <script src="js/modes/multiplayer.js"></script>
     <script src="js/modes/turns.js"></script>
+    <script src="js/modes/bot.js"></script>
+    <script src="js/modes/quickmatch.js"></script>
     <script src="js/main.js"></script>
   </body>
 </html>

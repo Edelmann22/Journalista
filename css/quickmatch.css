@@ -1,0 +1,115 @@
+/**
+ * Quick match · matchmaking screen and opponent touches
+ * =====================================================
+ *
+ * The search view (you vs. a flickering opponent slot, a scanning bar and a
+ * timer), the "typing…" label in the live race bars, and the opponent's chat
+ * bubble on the scoreboard. Colours and fonts come from css/theme.css.
+ */
+
+.rowx.between {
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+/* ---------- versus panel ---------------------------------------------------- */
+
+.versus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  border-top: 4px double var(--line);
+  border-bottom: var(--bw) solid var(--line);
+  padding: 20px 0 16px;
+}
+.vs-side {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+  min-width: 0;
+}
+.vs-name {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 23px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+.vs-sub {
+  font-size: 14px;
+  color: var(--ink-2);
+}
+.vs-mid {
+  font-family: var(--mast);
+  font-weight: 900;
+  font-size: 36px;
+  color: var(--spot);
+}
+.avatar.searching {
+  filter: grayscale(1) contrast(0.8);
+  opacity: 0.5;
+}
+
+/* ---------- scanning bar ---------------------------------------------------- */
+
+.search-bar {
+  position: relative;
+  height: 6px;
+  border: var(--bw) solid var(--line);
+  overflow: hidden;
+}
+.search-bar i {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 30%;
+  background: var(--spot);
+  animation: scan 1.3s ease-in-out infinite alternate;
+}
+@keyframes scan {
+  to {
+    left: 70%;
+  }
+}
+
+/* ---------- live race: "typing…" -------------------------------------------- */
+
+.lv-typing {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  font-style: italic;
+  color: var(--spot);
+  animation: blink 1s steps(2) infinite;
+}
+@keyframes blink {
+  50% {
+    opacity: 0.35;
+  }
+}
+
+/* ---------- scoreboard chat ------------------------------------------------- */
+
+.chat {
+  display: flex;
+  align-items: flex-end;
+  gap: 12px;
+}
+.chat .bubble {
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .search-bar i {
+    animation: none;
+    width: 100%;
+    opacity: 0.35;
+  }
+  .lv-typing {
+    animation: none;
+  }
+}

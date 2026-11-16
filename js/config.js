@@ -12,3 +12,9 @@
 
 const SUPABASE_URL = "https://wfixgjpmzmcugavvwjxo.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_8-6ASu9uPThW0fCsdp4yIQ_WYxpmjKW";
+
+/**
+ * Quick matches are played against a simulated opponent for now (js/modes/bot.js).
+ * Set to true to show "(bot)" after the opponent's name.
+ */
+const LABEL_BOTS = false;

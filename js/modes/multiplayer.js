@@ -16,7 +16,8 @@
  * Messages (field t):
  *   players  hello, ping, bye
  *   host     lobby, round, board, again, closed
- *   everyone hit, res (during a race round)
+ *   everyone hit, res, typ (during a race round; typ shows "typing…")
+ *   Quick matches add ready, rematch and chat (see js/modes/quickmatch.js).
  *   Hot seat adds turn, timeout, claim and miss (see js/modes/turns.js).
  */
 
@@ -244,6 +245,7 @@ async function enterRoom(code, asHost) {
 
 /** Stop timers and disconnect, without telling anyone. */
 function closeRoom() {
+  quickTimersClear();
   clearInterval(hb);
   cancelAnimationFrame(mraf);
   turnsStop();
@@ -257,6 +259,7 @@ function closeRoom() {
 
 /** Tell the room we are leaving (or closing it, as host), disconnect and go home. */
 function leaveRoom(msg) {
+  if (mp && mp.quick) quickAbandon();
   if (mp) {
     send({ t: mp.isHost ? "closed" : "bye" });
   }
@@ -313,6 +316,7 @@ function sendLobby() {
  */
 function onMessage(m) {
   if (!mp || !m || typeof m !== "object" || m.from === myId) return;
+  if (mp.quick && quickOnMessage(m)) return;
   if (mp.isHost) {
     let p = mp.players.find((p) => p.id === m.from);
     if (m.t === "hello") {
@@ -385,7 +389,13 @@ function onMessage(m) {
   }
   if (m.t === "hit" && mp.round && m.n === mp.n) {
     mp.round.live[m.from] = { c: m.c | 0, p: m.p | 0 };
+    delete mp.round.typing[m.from];
     renderLive();
+  }
+  if (m.t === "typ" && mp.round && mp.round.open && m.n === mp.n) {
+    mp.round.typing[m.from] = Date.now() + TYPING_MS;
+    renderLive();
+    setTimeout(renderLive, TYPING_MS + 50);
   }
   if (m.t === "miss") turnsOnMiss(m);
 }
@@ -531,6 +541,7 @@ function startRound(m) {
     found: [],
     pts: 0,
     live: {},
+    typing: {},
     res: {},
     open: true,
     deadline: performance.now() + m.secs * 1000,
@@ -613,7 +624,22 @@ wire("mpForm", "mpAnswer", () => {
   renderLive();
 });
 
-/** Draw the live bars showing how many answers each player has. */
+/** How long a "typing…" signal stays on screen without a fresh one. */
+const TYPING_MS = 1800;
+
+/** When this tab last told the room it was typing. */
+let lastTyp = 0;
+
+/** Tell the others we are typing, at most every 1.2 seconds. */
+$("mpAnswer").addEventListener("input", () => {
+  if (!mp || !mp.round || !mp.round.open || !$("mpAnswer").value.trim()) return;
+  const now = Date.now();
+  if (now - lastTyp < 1200) return;
+  lastTyp = now;
+  send({ t: "typ", n: mp.n });
+});
+
+/** Draw the live bars showing how many answers each player has, and who is typing. */
 function renderLive() {
   if (!mp || !mp.round) return;
   const r = mp.round,
@@ -636,7 +662,10 @@ function renderLive() {
       avatar(lookOf(x.id), "idle", "av-xs"),
       document.createTextNode(x.id === myId ? "You" : x.name),
     );
-    row.append(who, tr, el("span", "num", x.c + (x.c === 1 ? " answer" : " answers")));
+    const count = el("span", "num", x.c + (x.c === 1 ? " answer" : " answers"));
+    if (x.id !== myId && r.open && (r.typing[x.id] || 0) > Date.now())
+      count.appendChild(el("span", "lv-typing", "typing…"));
+    row.append(who, tr, count);
     box.appendChild(row);
   });
 }
@@ -796,10 +825,12 @@ function showBoard(m) {
       ? "The host can start another match from the room."
       : "Waiting for the host to start the next round.";
   show("mpboard");
+  if (mp.quick) quickBoard(m);
 }
 
 /** Host moves on: next round, or back to the lobby after the final. */
 $("bNext").addEventListener("click", () => {
+  if (mp && mp.quick) return quickNext();
   if (!mp || !mp.isHost) return;
   if (mp.phase === "final") {
     mp.phase = "lobby";

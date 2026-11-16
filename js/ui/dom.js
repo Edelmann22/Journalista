@@ -30,17 +30,17 @@ function el(tag, cls, text) {
 /** Id of the <main> view currently on screen. */
 let view = "home";
 /** Every view in index.html. Exactly one is visible at a time. */
-const VIEWS = ["home", "room", "mp", "turns", "mpboard", "play", "result"];
+const VIEWS = ["home", "search", "room", "mp", "turns", "mpboard", "play", "result"];
 
 /**
  * Show one view and hide the rest. Screens that are not about a single
- * question (home, room, result) switch the page back to the neutral edition.
+ * question (home, search, room, result) switch the page back to the neutral edition.
  */
 function show(id) {
   view = id;
   VIEWS.forEach((s) => ($(s).hidden = s !== id));
   window.scrollTo(0, 0);
-  if (id === "home" || id === "room" || id === "result") setEra(null);
+  if (id === "home" || id === "search" || id === "room" || id === "result") setEra(null);
 }
 
 /** Display name of a section id, or "All sections" for the mixed bag. */

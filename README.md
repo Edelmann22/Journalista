@@ -2,8 +2,8 @@
 
 Football trivia for people who know the game like a journalist. Every prompt has dozens of right
 answers. The obvious ones score little, and the names only a real reporter remembers make the
-front page. Play the daily seven alone, practise by section, or take on friends with a room code
-in two game types: **Newsroom race** (everyone answers at once) or **Hot seat** (take turns, and
+front page. Play the daily seven alone, practise by section, race a random opponent in a quick
+match, or take on friends with a room code in two game types: **Newsroom race** (everyone answers at once) or **Hot seat** (take turns, and
 whoever runs out of time loses the round). Every player is a little pixel-art reporter.
 
 The site is plain HTML, CSS and JavaScript, with no build step and no dependencies to install.
@@ -30,6 +30,7 @@ Journalista/
 │   ├── screens.css                Layout for each view: home, room, match, results
 │   ├── newspaper.css              Broadsheet overrides shared by both eras
 │   ├── effects.css                Pixel avatars, animations, Hot seat view, overlays
+│   ├── quickmatch.css             Matchmaking screen, "typing…" label, opponent chat
 │   └── responsive.css             Small screens and reduced motion
 │
 └── js/                            Classic scripts sharing one global scope, loaded in this order
@@ -53,7 +54,9 @@ Journalista/
     ├── modes/
     │   ├── solo.js                Daily seven and practice rounds
     │   ├── multiplayer.js         Rooms, Newsroom race rounds, scoreboard
-    │   └── turns.js               Hot seat: turn-based rounds, lose on timeout
+    │   ├── turns.js               Hot seat: turn-based rounds, lose on timeout
+    │   ├── bot.js                 Simulated opponent that plays like a person
+    │   └── quickmatch.js          Quick match: matchmaking, ready, rematch, walkover
     └── main.js                    Entry point: draws the front page
 ```
 
@@ -74,6 +77,15 @@ Every file starts with a comment that explains what it contains.
   seat_ players take turns filing one answer each (5–15 seconds a turn). Each answer can be filed
   once. Whoever runs out of time is _spiked_ (0 points for the round) and everyone else gets +100
   for surviving.
+- **Quick match.** _Find an opponent_ shows a matchmaking screen, pairs you with a reporter
+  and plays three rounds of Newsroom race, with Ready between rounds and a rematch at the end.
+  For now the opponent is simulated (`js/modes/bot.js`): a name, a town and a look, a skill
+  level that follows your quick-match record, patchy knowledge (common answers often, rare ones
+  seldom, better in their favourite section and era), and human timing: reading, thinking,
+  typing letter by letter, wrong guesses, blank moments and network delay. After the match they
+  may chat, ask for a rematch, turn yours down or leave, and very rarely they quit mid-match.
+  Set `LABEL_BOTS` in `js/config.js` to show "(bot)" after their name. To pair real players
+  later, replace `quickConnect()` in `js/modes/quickmatch.js`; see the comment at its top.
 - **Pixel reporters.** Each player's look is one number that seeds hair, skin, kit and
   accessories, so it draws the same on every device. Sprites are text grids in
   `js/ui/pixels.js`, easy to edit by hand. Moods (idle, happy, sad, shock) react to the game.

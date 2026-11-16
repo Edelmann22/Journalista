@@ -125,6 +125,7 @@ function renderHome() {
   renderTicker();
   renderEditor();
   renderMe();
+  renderQuickHome();
 }
 
 $("kick").addEventListener("click", () => {

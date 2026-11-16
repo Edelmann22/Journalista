@@ -13,6 +13,7 @@ const EDITOR_TIPS = [
   "Anyone can file Messi. Bring me a name nobody else has.",
   "Rarer answers score more. A front-page answer is worth 500.",
   "Try the Hot seat with friends: take turns, and don't let the clock run out on you.",
+  "No friends online? Find an opponent and race a stranger over three rounds.",
   "Typos are fine on long names, and a surname is enough for most players.",
   "Seven prompts a day, the same for everyone. Don't miss the deadline.",
   "In a race, an answer nobody else found is a scoop worth 50 extra.",
