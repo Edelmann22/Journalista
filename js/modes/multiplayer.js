@@ -17,7 +17,8 @@
  *   players  hello, ping, bye
  *   host     lobby, round, board, again, closed
  *   everyone hit, res, typ (during a race round; typ shows "typing…")
- *   Quick matches add ready, rematch and chat (see js/modes/quickmatch.js).
+ *   Quick matches add ready and rematch (see js/modes/quickmatch.js).
+ *   Everyone can chat: chat and ctyp (see js/modes/chat.js).
  *   Hot seat adds turn, timeout, claim and miss (see js/modes/turns.js).
  */
 
@@ -246,6 +247,7 @@ async function enterRoom(code, asHost) {
 /** Stop timers and disconnect, without telling anyone. */
 function closeRoom() {
   quickTimersClear();
+  $("mpChat").hidden = true;
   clearInterval(hb);
   cancelAnimationFrame(mraf);
   turnsStop();
@@ -317,6 +319,7 @@ function sendLobby() {
 function onMessage(m) {
   if (!mp || !m || typeof m !== "object" || m.from === myId) return;
   if (mp.quick && quickOnMessage(m)) return;
+  if (chatOnMessage(m)) return;
   if (mp.isHost) {
     let p = mp.players.find((p) => p.id === m.from);
     if (m.t === "hello") {
@@ -457,6 +460,7 @@ function renderRoom() {
           "."
         : "A match is in progress. You will join at the next round.";
   }
+  renderChat();
 }
 
 /** Host changed a match setting: store it and tell the room. */
@@ -827,6 +831,7 @@ function showBoard(m) {
       ? "The host can start another match from the room."
       : "Waiting for the host to start the next round.";
   show("mpboard");
+  renderChat();
   if (mp.quick) quickBoard(m);
 }
 

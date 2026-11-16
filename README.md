@@ -59,7 +59,8 @@ Journalista/
     │   ├── multiplayer.js         Rooms, Newsroom race rounds, scoreboard
     │   ├── turns.js               Hot seat: turn-based rounds, lose on timeout
     │   ├── bot.js                 Simulated opponent that plays like a person
-    │   └── quickmatch.js          Quick match: matchmaking, ready, rematch, walkover
+    │   ├── quickmatch.js          Quick match: matchmaking, ready, rematch, walkover
+    │   └── chat.js                Room chat in the lobby and on the scoreboard
     └── main.js                    Entry point: draws the front page
 ```
 
@@ -89,6 +90,10 @@ Every file starts with a comment that explains what it contains.
   may chat, ask for a rematch, turn yours down or leave, and very rarely they quit mid-match.
   Set `LABEL_BOTS` in `js/config.js` to show "(bot)" after their name. To pair real players
   later, replace `quickConnect()` in `js/modes/quickmatch.js`; see the comment at its top.
+- **Chat.** Everyone in a room can chat in the lobby and on the scoreboard; during a round the
+  latest message shows under the live bars. In a quick match the opponent reads the chat and
+  sometimes answers (a greeting, "gg", where they are from, a rematch), after a pause and a
+  "typing…", and sometimes ignores it, especially mid-round.
 - **Matching.** Typos, accents and nicknames are forgiven, and a surname alone counts. When
   two answers share a surname (Kasper and Peter Schmeichel), the surname alone asks the player
   to type the full name instead of guessing. Particles count too: "van Persie" and "Persie" both

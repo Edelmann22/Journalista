@@ -16,13 +16,16 @@
  *   - network delay on every message
  *   - after the match: a word in the chat, a rematch they may or may not
  *     want, and leaving when they are done. Very rarely they quit mid-match.
+ *   - the chat: they read what you write and sometimes answer, after a pause
+ *     and a "typing…", and sometimes say nothing at all. Busy mid-round,
+ *     they rarely reply. Now and then they wish you luck at kick-off.
  *
  * The bot speaks exactly the same room messages as a real player (hello is
  * skipped because the quick match seats it directly), so the Newsroom race
  * code in js/modes/multiplayer.js cannot tell the difference.
  *
- * Messages the bot sends: typ, hit, res, ready, chat, rematch, bye.
- * Messages it reacts to:  round, board, rematch, closed.
+ * Messages the bot sends: typ, hit, res, ready, chat, ctyp, rematch, bye.
+ * Messages it reacts to:  round, board, rematch, chat, closed.
  */
 
 /* ---------- who they are ---------------------------------------------------- */
@@ -110,6 +113,58 @@ const BOT_CHAT = {
   draw: ["gg", "level, nice", "can't split us", "gg, decider?"],
 };
 
+/**
+ * How the bot answers chat: [pattern, chance of replying, possible replies].
+ * Replies can be a function of the profile and match state. The first match wins;
+ * anything else gets a reply now and then from BOT_SMALL_TALK.
+ */
+const BOT_REPLIES = [
+  [
+    /\b(hi|hello|hey|yo|hiya|hola|ciao|servus|salut|zdr|zdravei|privet)\b|здр|здравей|привет/i,
+    0.75,
+    ["hi", "hey", "yo", "hello", "hey, gl"],
+  ],
+  [/\b(gg|good game|wp|well played)\b/i, 0.8, ["gg", "gg wp", "wp", "gg, that was fun"]],
+  [/\b(gl|good luck|hf|have fun)\b/i, 0.7, ["gl", "you too", "gl hf", "thanks, you too"]],
+  [
+    /where.*from|from where|where u from/i,
+    0.75,
+    (o) => ["from " + o.place, o.place, o.place + ", you?"],
+  ],
+  [
+    /\b(rematch|again|one more|another one|revenge)\b/i,
+    0.8,
+    (o, st) =>
+      !st.final
+        ? ["after this one", "let's finish this first"]
+        : st.final.want
+          ? ["sure", "go on then", "yeah, hit rematch"]
+          : ["can't, gotta go", "maybe later", "nah, I'm done"],
+  ],
+  [
+    /\b(nice|wow|great|well done|good one|impressive|insane|crazy|respect|genius)\b/i,
+    0.6,
+    ["thanks", "ty", "lucky guess", "haha thanks", "cheers"],
+  ],
+  [
+    /\b(noob|trash|bad|ez|easy|loser|rubbish|useless)\b/i,
+    0.4,
+    ["ok", "says you", "we'll see", "relax"],
+  ],
+  [/\b(lol|haha+|lmao|xd|rofl)\b/i, 0.4, ["haha", "lol"]],
+  [/\b(thanks|thank you|ty|thx|cheers)\b/i, 0.5, ["np", "no worries", "anytime"]],
+  [
+    /\b(how old|age)\b/i,
+    0.5,
+    ["old enough to remember Zidane", "too old for this", "why do you ask"],
+  ],
+  [/\b(how|who|what|why|which)\b.*\?/i, 0.5, ["no idea", "idk", "good question", "haha no clue"]],
+  [/\?\s*$/, 0.45, ["maybe", "idk", "haha", "could be"]],
+];
+
+/** Now and then, an answer to anything else. */
+const BOT_SMALL_TALK = ["haha", "true", "ok", "fair", "lol", "yeah", "same"];
+
 /** Chance of knowing an answer of each tier before skill and taste are applied. */
 const BOT_KNOW = [0, 0.9, 0.58, 0.3, 0.12];
 
@@ -162,6 +217,8 @@ function createBot(o, deliver) {
   const timers = new Set();
   let alive = true;
   let final = null;
+  let busyUntil = 0; // end of the current round, in Date.now() time
+  let lastReply = 0;
 
   /** Run fn after ms, unless the bot has been stopped. */
   const later = (fn, ms) => {
@@ -191,6 +248,9 @@ function createBot(o, deliver) {
     const p = promptAt(m.pid);
     if (!p) return;
     final = null;
+    busyUntil = Date.now() + m.secs * 1000;
+    if (m.n === 1 && chance(0.25))
+      chatLater(pickOne(["gl", "gl hf", "good luck", "let's go"]), 1, 4);
     const modern = p.era === "new";
     const eraF =
       o.style === "young"
@@ -245,14 +305,48 @@ function createBot(o, deliver) {
       later(() => say({ t: "bye" }), Math.min(o.walkout.at, end) * 1000);
   }
 
+  /** Type a chat message after a pause: "is typing…", then the message. */
+  function chatLater(text, minSecs, maxSecs) {
+    const start = rnd(minSecs, maxSecs) * 1000,
+      typing = (text.length * rnd(0.12, 0.2) + rnd(0.3, 0.8)) * 1000;
+    later(() => say({ t: "ctyp" }), start);
+    if (typing > 2500) later(() => say({ t: "ctyp" }), start + 2500);
+    later(() => say({ t: "chat", text }), start + typing);
+  }
+
+  /** Read a chat message and maybe answer it. Nobody answers everything. */
+  function hearChat(text) {
+    const now = Date.now();
+    if (now - lastReply < 4000 && chance(0.7)) return; // still answering the last one
+    const hit = BOT_REPLIES.find(([re]) => re.test(text));
+    let odds = hit ? hit[1] : 0.25;
+    if (now < busyUntil) odds *= 0.3; // concentrating on the round
+    if (!chance(odds)) return;
+    const options = !hit
+      ? BOT_SMALL_TALK
+      : typeof hit[2] === "function"
+        ? hit[2](o, { final })
+        : hit[2];
+    lastReply = now;
+    chatLater(pickOne(options), 1, 3.5);
+    // Asked for a rematch and up for it: offer one for real.
+    if (hit && hit[0].test("rematch") && final && final.want && !final.sent && chance(0.6))
+      later(
+        () => {
+          final.sent = true;
+          say({ t: "rematch" });
+        },
+        rnd(4, 7) * 1000,
+      );
+  }
+
   /** After the final: maybe a word in the chat, then a rematch or goodbye. */
   function afterMatch(m) {
     const mine = m.rows.find((r) => r.id === o.id),
       theirs = m.rows.find((r) => r.id !== o.id);
     if (!mine || !theirs) return;
     const outcome = mine.total > theirs.total ? "win" : mine.total < theirs.total ? "lose" : "draw";
-    if (chance(0.65))
-      later(() => say({ t: "chat", text: pickOne(BOT_CHAT[outcome]) }), rnd(1.2, 4) * 1000);
+    if (chance(0.65)) chatLater(pickOne(BOT_CHAT[outcome]), 1, 3);
     const want = chance(outcome === "lose" ? 0.75 : outcome === "win" ? 0.45 : 0.6);
     final = { want, sent: false, agreed: false };
     if (want && chance(0.45))
@@ -288,7 +382,8 @@ function createBot(o, deliver) {
           final.agreed = true;
           if (!final.sent) later(() => say({ t: "rematch" }), rnd(1, 4) * 1000);
         } else later(() => say({ t: "bye" }), rnd(2, 6) * 1000);
-      } else if (m.t === "closed") this.stop();
+      } else if (m.t === "chat") hearChat(String(m.text || ""));
+      else if (m.t === "closed") this.stop();
     },
     /** Disconnect: cancel everything still scheduled. */
     stop() {

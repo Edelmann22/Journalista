@@ -3,8 +3,8 @@
  * =====================================================
  *
  * The search view (you vs. a flickering opponent slot, a scanning bar and a
- * timer), the "typing…" label in the live race bars, and the opponent's chat
- * bubble on the scoreboard. Colours and fonts come from css/theme.css.
+ * timer), the "typing…" label in the live race bars, and the room chat
+ * (js/modes/chat.js). Colours and fonts come from css/theme.css.
  */
 
 .rowx.between {
@@ -92,15 +92,54 @@
   }
 }
 
-/* ---------- scoreboard chat ------------------------------------------------- */
+/* ---------- chat (lobby, scoreboard, in-round preview) --------------------- */
 
-.chat {
+.chat-log {
   display: flex;
-  align-items: flex-end;
-  gap: 12px;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 190px;
+  overflow-y: auto;
+  padding: 8px 10px;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
 }
-.chat .bubble {
-  min-height: 0;
+.chat-line {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  line-height: 1.3;
+}
+.chat-line b {
+  white-space: nowrap;
+}
+.chat-line.me b {
+  color: var(--spot);
+}
+.chat-line span {
+  overflow-wrap: anywhere;
+}
+.chat-empty {
+  margin: 0;
+}
+.chat-typ {
+  min-height: 1.3em;
+  font-style: italic;
+}
+.chat-form {
+  display: flex;
+  gap: 8px;
+}
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+}
+.chat-peek {
+  padding: 6px 10px;
+  font-size: 15px;
+  background: var(--panel);
+  border-left: 4px solid var(--spot);
 }
 
 @media (prefers-reduced-motion: reduce) {

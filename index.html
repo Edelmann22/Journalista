@@ -244,6 +244,22 @@
           <span class="kick" id="pCount">Players</span>
           <div class="plist" id="plist"></div>
         </div>
+        <section class="chatbox stack gap-6" aria-label="Chat">
+          <span class="kick">Chat</span>
+          <div class="chat-log" id="chatLogR" aria-live="polite"></div>
+          <p class="small chat-typ" id="chatTypR"></p>
+          <form class="chat-form" id="chatFormR" autocomplete="off">
+            <input
+              type="text"
+              id="chatInR"
+              maxlength="80"
+              placeholder="Say something…"
+              autocomplete="off"
+              aria-label="Chat message"
+            />
+            <button class="ghost" type="submit">Send</button>
+          </form>
+        </section>
         <div class="stack gap-6">
           <span class="kick">Game type</span>
           <div class="modes">
@@ -344,6 +360,7 @@
           <span class="kick">Live</span>
           <div class="live" id="mpLive"></div>
         </div>
+        <p class="chat-peek" id="mpChat" role="status" aria-live="polite" hidden></p>
       </main>
 
       <!-- ============================================================
@@ -400,10 +417,25 @@
           <h2 id="bHead"></h2>
         </div>
         <div id="bRanks"></div>
-        <div class="chat" id="bChat" hidden></div>
         <button class="btn" id="bNext" type="button">Next round</button>
         <button class="ghost" id="bNew" type="button" hidden>Find a new opponent</button>
         <p class="small" id="bWait"></p>
+        <section class="chatbox stack gap-6" aria-label="Chat">
+          <span class="kick">Chat</span>
+          <div class="chat-log" id="chatLogB" aria-live="polite"></div>
+          <p class="small chat-typ" id="chatTypB"></p>
+          <form class="chat-form" id="chatFormB" autocomplete="off">
+            <input
+              type="text"
+              id="chatInB"
+              maxlength="80"
+              placeholder="Say something…"
+              autocomplete="off"
+              aria-label="Chat message"
+            />
+            <button class="ghost" type="submit">Send</button>
+          </form>
+        </section>
         <div class="stack gap-6">
           <span class="kick">The prompt</span>
           <p class="h" id="bPrompt"></p>
@@ -518,6 +550,7 @@
     <script src="js/modes/turns.js"></script>
     <script src="js/modes/bot.js"></script>
     <script src="js/modes/quickmatch.js"></script>
+    <script src="js/modes/chat.js"></script>
     <script src="js/main.js"></script>
   </body>
 </html>

@@ -21,8 +21,8 @@
  * open a room as host, and hand the other the code. The rest of the match
  * (rounds, scoring, ready, rematch messages) already works over the network.
  *
- * Extra room messages used here: ready, rematch, chat (and typ, see
- * js/modes/multiplayer.js).
+ * Extra room messages used here: ready and rematch. Chat works as in any
+ * room (js/modes/chat.js); the opponent may or may not answer.
  */
 
 /* ---------- settings -------------------------------------------------------- */
@@ -70,7 +70,6 @@ function quickTimersClear() {
     clearInterval(qm.readyTick);
   }
   $("bNew").hidden = true;
-  $("bChat").hidden = true;
   $("bNext").disabled = false;
   $("bLeave").textContent = "Leave room";
 }
@@ -321,15 +320,6 @@ function quickOnMessage(m) {
     }
     return true;
   }
-  if (m.t === "chat") {
-    const box = $("bChat");
-    box.innerHTML = "";
-    const bubble = el("div", "bubble say-in");
-    bubble.append(el("b", null, name + ": "), document.createTextNode(String(m.text).slice(0, 60)));
-    box.append(avatar(qm.opp.look, "happy", "av-sm"), bubble);
-    box.hidden = view !== "mpboard";
-    return true;
-  }
   if (m.t === "bye") {
     qm.gone = true;
     if (qm.phase === "final") {
@@ -360,7 +350,6 @@ function quickBoard(m) {
   }
   qm.phase = "board";
   $("bNew").hidden = true;
-  $("bChat").hidden = true;
   $("bNext").textContent = "Ready for round " + (m.n + 1);
   qm.readyLeft = QM_READY_SECS;
   readyText();
@@ -489,10 +478,10 @@ function quickWalkover() {
   $("bGroups").innerHTML = "";
   $("bNext").hidden = true;
   $("bNew").hidden = false;
-  $("bChat").hidden = true;
   $("bWait").textContent = "";
   $("bLeave").textContent = "Back to front page";
   show("mpboard");
+  renderChat();
   stamp("Walkover", "var(--t3)");
 }
 
