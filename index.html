@@ -355,6 +355,10 @@
           <button class="btn" type="button">Submit</button>
         </form>
         <div class="say" id="mpSay" role="status" aria-live="polite"></div>
+        <p class="joker" id="mpJoker" hidden>
+          <b>Joker</b>
+          <span class="joker-mask"></span>
+        </p>
         <div class="chips" id="mpMine"></div>
         <div class="stack gap-6">
           <span class="kick">Live</span>
@@ -487,6 +491,10 @@
             <button class="btn" type="button">Submit</button>
           </form>
           <div class="say" id="say" role="status" aria-live="polite"></div>
+          <p class="joker" id="joker" hidden>
+            <b>Joker</b>
+            <span class="joker-mask"></span>
+          </p>
           <button class="ghost" id="skip" type="button">Skip this prompt</button>
         </div>
         <div id="reveal" class="stack gap-14" hidden>
@@ -539,6 +547,7 @@
     <script src="js/data/eras.js"></script>
     <script src="js/core/rules.js"></script>
     <script src="js/core/matching.js"></script>
+    <script src="js/core/joker.js"></script>
     <script src="js/core/storage.js"></script>
     <script src="js/core/utils.js"></script>
     <script src="js/ui/dom.js"></script>

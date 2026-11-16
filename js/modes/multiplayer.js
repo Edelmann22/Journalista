@@ -560,6 +560,7 @@ function startRound(m) {
   $("mpSay").className = "say";
   $("mpAnswer").value = "";
   $("mpAnswer").disabled = false;
+  $("mpJoker").hidden = true;
   renderLive();
   show("mp");
   replay($("mpCard"), "enter");
@@ -577,6 +578,10 @@ function mpTick() {
   $("mpFill").style.transform = "scaleX(" + left / (r.secs * 1000) + ")";
   $("mpSec").classList.toggle("low", s <= 7);
   $("mpSec").textContent = s;
+  if (!r.joker && !r.found.length && left > 0 && jokerDue(r.secs, left)) {
+    r.joker = true;
+    showJoker("mpJoker", r.p);
+  }
   if (left <= 0) {
     endRound();
     return;

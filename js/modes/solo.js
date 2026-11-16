@@ -213,6 +213,8 @@ function ask() {
   setSoloMood("idle");
   game.deadline = performance.now() + SECONDS * 1000;
   game.open = true;
+  game.joker = false;
+  $("joker").hidden = true;
   cancelAnimationFrame(raf);
   tick();
 }
@@ -226,6 +228,10 @@ function tick() {
   $("sec").classList.toggle("low", s <= 7);
   $("sec").textContent = s;
   if (s <= 5) setSoloMood("shock");
+  if (!game.joker && left > 0 && jokerDue(SECONDS, left)) {
+    game.joker = true;
+    showJoker("joker", promptOf(game));
+  }
   if (left <= 0) {
     settle(null, "Missed the deadline");
     return;

@@ -491,3 +491,29 @@ textarea {
   font-size: 19px;
   line-height: 1.2;
 }
+
+/* ---------- joker (js/core/joker.js) --------------------------------------- */
+
+.joker {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 10px 12px;
+  background: var(--panel);
+  border: var(--bw) dashed var(--spot);
+}
+.joker b {
+  font-family: var(--display);
+  font-size: 15px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--spot);
+}
+.joker-mask {
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  white-space: pre-wrap;
+}

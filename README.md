@@ -47,6 +47,7 @@ Journalista/
     ├── core/
     │   ├── rules.js               Scoring tiers, clock and match length
     │   ├── matching.js            Forgiving answer matching (accents, aliases, typos)
+    │   ├── joker.js               The joker: part of an answer after 40 seconds
     │   ├── storage.js             Saved name, streak, best score, practice history
     │   └── utils.js               Dates, seeded random, shuffling, number formatting
     ├── ui/
@@ -90,6 +91,9 @@ Every file starts with a comment that explains what it contains.
   may chat, ask for a rematch, turn yours down or leave, and very rarely they quit mid-match.
   Set `LABEL_BOTS` in `js/config.js` to show "(bot)" after their name. To pair real players
   later, replace `quickConnect()` in `js/modes/quickmatch.js`; see the comment at its top.
+- **Joker.** Still no correct answer 40 seconds into a prompt? Part of a common answer appears,
+  like "L**a M**r_ć". On shorter clocks (solo prompts are 25 seconds) it comes with 5 seconds
+  left. Solo and Newsroom race; Hot seat turns are too short.
 - **Chat.** Everyone in a room can chat in the lobby and on the scoreboard; during a round the
   latest message shows under the live bars. In a quick match the opponent reads the chat and
   sometimes answers (a greeting, "gg", where they are from, a rematch), after a pause and a
@@ -124,3 +128,21 @@ Formatting is handled by [Prettier](https://prettier.io) using `.prettierrc.json
 ```sh
 npx prettier --write .
 ```
+
+## Android app
+
+`android/` wraps the game in a small Android app: one full-screen WebView that serves the
+game's files from inside the APK (at `https://app.journalista/`), so saved progress and online
+rooms work as on the website. Links to other sites open in the phone's browser.
+
+Build it on Ubuntu or Debian with Java and
+`sudo apt install aapt apksigner zipalign dalvik-exchange android-sdk-platform-23`, then from the
+repository root:
+
+```sh
+KS_PASS=your-password ./android/build.sh path/to/journalista.keystore
+```
+
+The APK lands in `android/Journalista.apk`. Sign every update with the same keystore, or phones
+will refuse to install it over the old version. Bump `android:versionCode` in
+`android/AndroidManifest.xml` for each release. Keystores and build output are git-ignored.
