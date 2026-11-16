@@ -287,6 +287,10 @@ form .btn {
   color: var(--on-tier);
   font-weight: 700;
 }
+.chip.more {
+  border-style: dashed;
+  color: var(--ink-2);
+}
 .chip small {
   font-size: 11.5px;
   opacity: 0.8;

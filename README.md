@@ -40,6 +40,9 @@ Journalista/
     │   ├── questions-core.js      Prompt helpers and the eight original sections
     │   ├── questions-expanded.js  Extra prompts for the original sections
     │   ├── questions-new-sections.js  Four newer sections
+    │   ├── players.js             About 1,850 national-team players: country, position, era, fame
+    │   ├── questions-players.js   Prompts generated from players.js: nations, regions, positions, letters
+    │   ├── questions-culture.js   Competitions, football culture and extra prompts
     │   └── eras.js                Tags untagged prompts as modern or archive
     ├── core/
     │   ├── rules.js               Scoring tiers, clock and match length
@@ -86,6 +89,10 @@ Every file starts with a comment that explains what it contains.
   may chat, ask for a rematch, turn yours down or leave, and very rarely they quit mid-match.
   Set `LABEL_BOTS` in `js/config.js` to show "(bot)" after their name. To pair real players
   later, replace `quickConnect()` in `js/modes/quickmatch.js`; see the comment at its top.
+- **Matching.** Typos, accents and nicknames are forgiven, and a surname alone counts. When
+  two answers share a surname (Kasper and Peter Schmeichel), the surname alone asks the player
+  to type the full name instead of guessing. Particles count too: "van Persie" and "Persie" both
+  work.
 - **Pixel reporters.** Each player's look is one number that seeds hair, skin, kit and
   accessories, so it draws the same on every device. Sprites are text grids in
   `js/ui/pixels.js`, easy to edit by hand. Moods (idle, happy, sad, shock) react to the game.
@@ -95,6 +102,11 @@ Every file starts with a comment that explains what it contains.
 
 Add prompts with `ADD("section-id", P(text, sub, kind, answers, era))`, or add a whole section
 with `ADDC({...})`. Put them at the **end** of the newest question file.
+
+Most player prompts come from `js/data/players.js`. Adding a line there
+(`fame era position Name|aliases`, explained at the top of the file) adds that player to every
+matching prompt: their country, their position, their region and their surname letter. To add a
+new generated prompt, append it to the end of the matching list in `js/data/questions-players.js`.
 
 > Prompts are identified by their position (section index, prompt index) in saved practice
 > history, the daily seven and multiplayer messages. Only ever append. Never reorder or delete

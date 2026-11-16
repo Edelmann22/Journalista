@@ -14,6 +14,8 @@ const EDITOR_TIPS = [
   "Rarer answers score more. A front-page answer is worth 500.",
   "Try the Hot seat with friends: take turns, and don't let the clock run out on you.",
   "No friends online? Find an opponent and race a stranger over three rounds.",
+  "Stuck for a byline? Press Random next to your name.",
+  "Try the Name game: footballers by the first letter of their surname.",
   "Typos are fine on long names, and a surname is enough for most players.",
   "Seven prompts a day, the same for everyone. Don't miss the deadline.",
   "In a race, an answer nobody else found is a scoop worth 50 extra.",
@@ -69,6 +71,78 @@ function renderMe() {
 }
 
 $("editorBtn").addEventListener("click", nextTip);
+
+/* ---------- random name ----------------------------------------------------- */
+
+/** First halves for made-up press-box names. */
+const NAME_PREFIX = [
+  "Scoop",
+  "Inky",
+  "Chief",
+  "Ace",
+  "Rookie",
+  "Byline",
+  "Cub",
+  "Hack",
+  "Sunday",
+  "Late",
+];
+
+/** Second halves: a little football vocabulary. */
+const NAME_WORDS = [
+  "Volley",
+  "Nutmeg",
+  "Rabona",
+  "Panenka",
+  "Libero",
+  "Header",
+  "Tiki",
+  "Stopper",
+  "Chip",
+  "Scorpion",
+  "Hattrick",
+  "Regista",
+  "Sweeper",
+];
+
+/** Ways to dress up a legend's surname. */
+const NAME_TITLES = ["Don", "Mister", "Young", "Little", "Big", "Señor", "Herr", "Sir"];
+
+/**
+ * A random player name: "Scoop Baggio", "Totti10", "InkyRabona", "Don Zidane"…
+ * Surnames come from the best-known players in js/data/players.js. Always 14 characters or fewer.
+ */
+function randomName() {
+  const pick = (list) => list[Math.floor(Math.random() * list.length)];
+  const legends = PLAYERS.filter((p) => p.fame <= 2 && !p.full)
+    .map((p) => p.name.split(" ").pop())
+    .filter((s) => s.length >= 3 && s.length <= 8 && /^[\p{L}]+$/u.test(s));
+  const nums = ["7", "9", "10", "11", "8", "23", "99", "4", "1", "88"];
+  for (let tries = 0; tries < 20; tries++) {
+    const r = Math.random();
+    const name =
+      r < 0.35
+        ? pick(NAME_PREFIX) + " " + pick(legends)
+        : r < 0.6
+          ? pick(legends) + pick(nums)
+          : r < 0.8
+            ? pick(NAME_PREFIX) + pick(NAME_WORDS)
+            : pick(NAME_TITLES) + " " + pick(legends);
+    if (name.length <= 14 && name !== $("name").value) return name;
+  }
+  return pick(legends);
+}
+
+/** Fill the name box with a random name and keep it for next time. */
+$("randName").addEventListener("click", () => {
+  const n = randomName();
+  $("name").value = n;
+  store.name = n;
+  save(store);
+  replay($("name"), "say-in");
+  $("homeMsg").textContent = "";
+  $("qmMsg").textContent = "";
+});
 
 /** Reroll the player's look. */
 $("reroll").addEventListener("click", () => {

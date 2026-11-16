@@ -247,7 +247,9 @@ wire("form", "answer", () => {
     settle(hit);
     return;
   }
-  $("say").textContent = "“" + raw + "” does not count. Try another.";
+  $("say").textContent = isAmbiguous(promptOf(game), raw)
+    ? "More than one answer is called “" + raw + "”. Type the full name."
+    : "“" + raw + "” does not count. Try another.";
   shakeEl($("card"));
   $("answer").select();
 });

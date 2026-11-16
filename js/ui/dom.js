@@ -76,6 +76,9 @@ function shakeEl(e) {
   e.classList.add("shake");
 }
 
+/** Most answer chips shown per tier on a reveal or scoreboard. */
+const TIER_CHIPS = 30;
+
 /**
  * Render a prompt's answers grouped by tier, rarest first.
  *
@@ -94,7 +97,15 @@ function tierGroups(box, p, chipFor) {
       el("span", "kick", TIER[t].mark + " · " + TIER[t].name + " · " + TIER[t].pts + " pts"),
     );
     const chips = el("div", "chips");
-    list.forEach((a) => chips.appendChild(chipFor(a)));
+    // Long lists show the first TIER_CHIPS answers, plus any the players found.
+    let hidden = 0;
+    list.forEach((a, i) => {
+      const chip = chipFor(a);
+      if (i < TIER_CHIPS || chip.classList.contains("you") || chip.querySelector("small"))
+        chips.appendChild(chip);
+      else hidden++;
+    });
+    if (hidden) chips.appendChild(el("span", "chip more", "+" + hidden + " more"));
     g.appendChild(chips);
     box.appendChild(g);
   }

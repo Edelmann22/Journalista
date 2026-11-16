@@ -102,13 +102,25 @@
             </button>
             <div class="field grow">
               <label class="small" for="name">Your name</label>
-              <input
-                type="text"
-                id="name"
-                maxlength="14"
-                placeholder="e.g. Stoichkov"
-                autocomplete="nickname"
-              />
+              <div class="rowx">
+                <input
+                  class="grow"
+                  type="text"
+                  id="name"
+                  maxlength="14"
+                  placeholder="e.g. Stoichkov"
+                  autocomplete="nickname"
+                />
+                <button
+                  class="ghost name-btn"
+                  id="randName"
+                  type="button"
+                  aria-label="Pick a random name"
+                >
+                  <img class="pix-icon" data-icon="dice" alt="" />
+                  Random
+                </button>
+              </div>
             </div>
           </div>
           <button class="btn" id="create" type="button">Create a room</button>
@@ -489,6 +501,9 @@
     <script src="js/data/questions-core.js"></script>
     <script src="js/data/questions-expanded.js"></script>
     <script src="js/data/questions-new-sections.js"></script>
+    <script src="js/data/players.js"></script>
+    <script src="js/data/questions-players.js"></script>
+    <script src="js/data/questions-culture.js"></script>
     <script src="js/data/eras.js"></script>
     <script src="js/core/rules.js"></script>
     <script src="js/core/matching.js"></script>

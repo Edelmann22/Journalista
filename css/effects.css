@@ -163,6 +163,17 @@
     transform: translateY(6px);
   }
 }
+.name-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  padding: 10px 12px;
+}
+.name-btn .pix-icon {
+  width: 16px;
+  height: 16px;
+}
 .me-row {
   display: flex;
   align-items: flex-end;

@@ -596,7 +596,9 @@ wire("mpForm", "mpAnswer", () => {
   const hit = findAnswer(r.p, raw);
   if (!hit) {
     say.className = "say";
-    say.textContent = "“" + raw + "” does not count.";
+    say.textContent = isAmbiguous(r.p, raw)
+      ? "More than one answer is called “" + raw + "”. Type the full name."
+      : "“" + raw + "” does not count.";
     shakeEl($("mpCard"));
     inp.select();
     return;

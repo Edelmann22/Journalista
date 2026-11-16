@@ -131,6 +131,16 @@ const SPRITE_ICONS = {
     "..oooo..",
     "........",
   ],
+  dice: [
+    "oooooooo",
+    "owwwwwwo",
+    "owowwowo",
+    "owwwwwwo",
+    "owwowwwo",
+    "owowwowo",
+    "owwwwwwo",
+    "oooooooo",
+  ],
   watch: [
     "...oo...",
     "..oooo..",
