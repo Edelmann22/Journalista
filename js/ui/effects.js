@@ -49,14 +49,33 @@ function fxContext() {
     document.body.appendChild(fx.canvas);
     fx.ctx = fx.canvas.getContext("2d");
   }
-  const dpr = Math.min(2, window.devicePixelRatio || 1);
-  if (fx.canvas.width !== Math.round(innerWidth * dpr)) {
-    fx.canvas.width = Math.round(innerWidth * dpr);
-    fx.canvas.height = Math.round(innerHeight * dpr);
+  // Resize on any change, not just width: the phone keyboard changes the height.
+  const dpr = Math.min(2, window.devicePixelRatio || 1),
+    w = Math.round(innerWidth * dpr),
+    h = Math.round(innerHeight * dpr);
+  if (fx.canvas.width !== w || fx.canvas.height !== h) {
+    fx.canvas.width = w;
+    fx.canvas.height = h;
   }
   fx.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   return fx.ctx;
 }
+
+/** Wipe the whole canvas bitmap, whatever size it was drawn at. */
+function fxWipe() {
+  if (!fx.ctx) return;
+  fx.ctx.setTransform(1, 0, 0, 1, 0, 0);
+  fx.ctx.clearRect(0, 0, fx.canvas.width, fx.canvas.height);
+}
+
+/** Stop the confetti at once and clear the screen (leaving a view, app paused). */
+function fxStop() {
+  if (fx.raf) cancelAnimationFrame(fx.raf);
+  fx.raf = 0;
+  fx.parts = [];
+  fxWipe();
+}
+document.addEventListener("visibilitychange", () => document.hidden && fxStop());
 
 /**
  * Throw scraps of newsprint in the tier colours from an element.
@@ -90,8 +109,8 @@ function confetti(target, count = 60) {
 
 /** One frame of confetti physics: gravity, drag, flutter and fade. */
 function fxStep() {
-  const ctx = fx.ctx;
-  ctx.clearRect(0, 0, innerWidth, innerHeight);
+  fxWipe();
+  const ctx = fxContext();
   fx.parts = fx.parts.filter((p) => {
     p.vy += 0.22;
     p.vx *= 0.985;
@@ -110,7 +129,11 @@ function fxStep() {
     ctx.restore();
     return true;
   });
-  fx.raf = fx.parts.length ? requestAnimationFrame(fxStep) : 0;
+  if (fx.parts.length) fx.raf = requestAnimationFrame(fxStep);
+  else {
+    fx.raf = 0;
+    fxWipe();
+  }
 }
 
 /* ---------- overlays -------------------------------------------------------- */
