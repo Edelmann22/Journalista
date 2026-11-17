@@ -31,6 +31,8 @@ Journalista/
 │   ├── newspaper.css              Broadsheet overrides shared by both eras
 │   ├── effects.css                Pixel avatars, animations, Hot seat view, overlays
 │   ├── quickmatch.css             Matchmaking screen, "typing…" label, opponent chat
+│   ├── edition.css                Front page cards (press pass, today's edition, modes,
+│   │                              level picker, section tiles) and the coloured clock
 │   └── responsive.css             Small screens and reduced motion
 │
 └── js/                            Classic scripts sharing one global scope, loaded in this order
@@ -84,8 +86,11 @@ Every file starts with a comment that explains what it contains.
   for surviving.
 - **Quick match.** _Find an opponent_ shows a matchmaking screen, pairs you with a reporter
   and plays three rounds of Newsroom race, with Ready between rounds and a rematch at the end.
-  For now the opponent is simulated (`js/modes/bot.js`): a name, a town and a look, a skill
-  level that follows your quick-match record, patchy knowledge (common answers often, rare ones
+  For now the opponent is simulated (`js/modes/bot.js`): a name, a town and a look, and a level
+  you pick on the front page (`BOT_LEVELS`): Rookie, Pundit, Veteran or Legend, or _Any_, which
+  follows your quick-match record. Each level sets how likely the reporter knows an answer of
+  each tier, how many they file at most per round, how often they go blank and how fast they type,
+  so even a Legend misses answers. Your record is kept per level. Knowledge is patchy (common answers often, rare ones
   seldom, better in their favourite section and era), and human timing: reading, thinking,
   typing letter by letter, wrong guesses, blank moments and network delay. After the match they
   may chat, ask for a rematch, turn yours down or leave, and very rarely they quit mid-match.

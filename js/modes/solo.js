@@ -90,6 +90,9 @@ function todaysResult() {
 
 /* ---------- front page ------------------------------------------------------ */
 
+/** Accent colours the section tiles cycle through. */
+const TILE_COLOURS = ["#c8102e", "#1456a8", "#0a6b46", "#d98a00", "#6a3fa0", "#0f7d8c", "#b5481a"];
+
 /** Fill the home view: dateline, streak, daily button and the section index. */
 function renderHome() {
   $("name").value = store.name || "";
@@ -100,20 +103,32 @@ function renderHome() {
     year: "numeric",
   });
   $("edNo").textContent = "No. " + (dayNumber(today()) - 20400);
-  const played = todaysResult();
-  $("edition").textContent =
-    "Play alone · streak " + streakNow() + " · best " + fmt(store.best || 0);
+  const played = todaysResult(),
+    q = qmRecord();
+  if (!store.passNo) {
+    store.passNo = 1000 + Math.floor(Math.random() * 9000);
+    save(store);
+  }
+  $("passNo").textContent = "No. " + store.passNo;
+  $("stStreak").textContent = streakNow();
+  $("stBest").textContent = fmt(store.best || 0);
+  $("stQm").textContent = q.w + "–" + q.l;
+  $("edition").textContent = "Today's edition · " + $("edNo").textContent;
+  const tags = $("edTags");
+  tags.innerHTML = "";
+  pickDaily().forEach(([ci]) => tags.appendChild(el("span", "ed-tag", CATS[ci].name)));
   $("kick").textContent = played ? "See today's result" : "Play today's seven";
   $("homeNote").textContent = played
     ? "You scored " + fmt(played.score) + " today. A new seven arrives at midnight."
-    : "The same seven prompts for everyone today, one answer each, 25 seconds a prompt.";
+    : "The same seven prompts for everyone, one answer each, 25 seconds a prompt.";
   const box = $("index");
   box.innerHTML = "";
   [{ id: "all", name: "Mixed bag", blurb: "Seven at random from every section", n: TOTAL }]
     .concat(CATS.map((c) => ({ id: c.id, name: c.name, blurb: c.blurb, n: c.prompts.length })))
-    .forEach((r) => {
+    .forEach((r, i) => {
       const b = el("button", "sec");
       b.type = "button";
+      b.style.setProperty("--tile", TILE_COLOURS[i % TILE_COLOURS.length]);
       b.append(
         el("span", "t", r.name),
         el("span", "c num", r.n + " prompts"),
@@ -226,6 +241,7 @@ function tick() {
     s = Math.ceil(left / 1000);
   $("fill").style.transform = "scaleX(" + left / (SECONDS * 1000) + ")";
   $("sec").classList.toggle("low", s <= 7);
+  $("sec").classList.toggle("warn", s > 7 && s <= 12);
   $("sec").textContent = s;
   if (s <= 5) setSoloMood("shock");
   if (!game.joker && left > 0 && jokerDue(SECONDS, left)) {

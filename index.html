@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="css/newspaper.css" />
     <link rel="stylesheet" href="css/effects.css" />
     <link rel="stylesheet" href="css/quickmatch.css" />
+    <link rel="stylesheet" href="css/edition.css" />
     <link rel="stylesheet" href="css/responsive.css" />
   </head>
   <body>
@@ -75,11 +76,9 @@
           <span class="kick spot">Front page</span>
           <h1>Know football like the best journalist in the press box.</h1>
           <p>
-            Every question has dozens of right answers. Anyone can file the obvious one. The names
-            only a real reporter remembers make the front page. Race your friends to the deadline or
-            work today's seven alone.
+            Anyone can file the obvious answer. The names only a real reporter remembers make the
+            front page.
           </p>
-          <span class="byline">By our football desk</span>
           <div class="editor">
             <button class="editor-btn" id="editorBtn" type="button" aria-label="Another tip">
               <img class="avatar av-lg bob" id="editorAv" alt="" width="16" height="16" />
@@ -88,9 +87,13 @@
           </div>
         </section>
 
-        <section class="card stack">
-          <span class="kick spot">Newsroom · play with friends</span>
-          <div class="me-row">
+        <!-- Press pass: your reporter, name and stats (stats filled by renderHome) -->
+        <section class="pass" aria-label="Your press pass">
+          <div class="pass-top">
+            <span>Press pass</span>
+            <span class="num" id="passNo"></span>
+          </div>
+          <div class="pass-body">
             <button
               class="me-btn"
               id="reroll"
@@ -101,10 +104,9 @@
               <span class="me-tag">New look</span>
             </button>
             <div class="field grow">
-              <label class="small" for="name">Your name</label>
-              <div class="rowx">
+              <label class="small" for="name">Reporter name</label>
+              <div class="name-wrap">
                 <input
-                  class="grow"
                   type="text"
                   id="name"
                   maxlength="14"
@@ -112,15 +114,71 @@
                   autocomplete="nickname"
                 />
                 <button
-                  class="ghost name-btn"
+                  class="name-btn"
                   id="randName"
                   type="button"
                   aria-label="Pick a random name"
+                  title="Random name"
                 >
                   <img class="pix-icon" data-icon="dice" alt="" />
-                  Random
                 </button>
               </div>
+            </div>
+          </div>
+          <div class="pass-stats">
+            <div class="stat">
+              <img class="pix-icon" data-icon="flame" alt="" />
+              <b class="num" id="stStreak">0</b>
+              <span>Day streak</span>
+            </div>
+            <div class="stat">
+              <img class="pix-icon" data-icon="trophy" alt="" />
+              <b class="num" id="stBest">0</b>
+              <span>Best seven</span>
+            </div>
+            <div class="stat">
+              <img class="pix-icon" data-icon="bolt" alt="" />
+              <b class="num" id="stQm">0–0</b>
+              <span>Quick match</span>
+            </div>
+          </div>
+        </section>
+
+        <!-- Today's edition: the daily seven -->
+        <section class="edition-card stack gap-12">
+          <div class="ed-top">
+            <img class="pix-icon" data-icon="paper" alt="" />
+            <span class="kick" id="edition">Today's edition</span>
+          </div>
+          <h2 class="ed-title">Today's seven</h2>
+          <div class="ed-tags" id="edTags"></div>
+          <button class="btn ed-cta" id="kick" type="button">Play today's seven</button>
+          <p class="small" id="homeNote"></p>
+        </section>
+
+        <!-- Quick match against a reporter (bot) of a chosen level -->
+        <section class="mode mode-quick stack gap-12" id="qmCard">
+          <div class="mode-head">
+            <img class="pix-icon" data-icon="bolt" alt="" />
+            <div>
+              <b>Quick match</b>
+              <span>Race a random reporter · three rounds</span>
+            </div>
+          </div>
+          <div class="levels" id="qmLevels" role="radiogroup" aria-label="Opponent level"></div>
+          <p class="small level-blurb" id="qmLevelBlurb"></p>
+          <button class="btn" id="qmFind" type="button">Find an opponent</button>
+          <p class="small" id="qmRecord"></p>
+          <p class="small" id="qmMsg" role="status" aria-live="polite"></p>
+        </section>
+
+        <!-- Rooms with friends -->
+        <section class="mode mode-friends stack gap-12">
+          <div class="mode-head">
+            <img class="pix-icon" data-icon="people" alt="" />
+            <div>
+              <b>Newsroom</b>
+              <span>Play with friends using a room code</span>
             </div>
           </div>
           <button class="btn" id="create" type="button">Create a room</button>
@@ -139,26 +197,9 @@
           <p class="small" id="homeMsg" role="status" aria-live="polite"></p>
         </section>
 
-        <section class="card stack" id="qmCard">
-          <span class="kick spot">Quick match · race a random reporter</span>
-          <p class="small">
-            Get paired with someone at your level for three rounds of Newsroom race. Uses your name
-            and reporter above.
-          </p>
-          <button class="btn" id="qmFind" type="button">Find an opponent</button>
-          <p class="small" id="qmRecord"></p>
-          <p class="small" id="qmMsg" role="status" aria-live="polite"></p>
-        </section>
-
-        <section class="stack">
-          <span class="kick" id="edition">Play alone</span>
-          <button class="ghost" id="kick" type="button">Play today's seven</button>
-          <p class="small" id="homeNote"></p>
-        </section>
-
         <section class="stack gap-4">
           <span class="kick">Inside the paper · practice by section</span>
-          <div id="index"></div>
+          <div id="index" class="tiles"></div>
         </section>
 
         <section class="stack">

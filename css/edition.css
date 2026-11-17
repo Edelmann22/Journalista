@@ -1,0 +1,517 @@
+/**
+ * Edition · the colourful front page and livelier match screens
+ * ==============================================================
+ *
+ * Loaded after the other stylesheets, so it overrides them. Adds:
+ *   - the press pass (your reporter, name with a dice button, three stats)
+ *   - the "Today's edition" card for the daily seven
+ *   - mode cards with a coloured header: Quick match (blue) and Newsroom (green)
+ *   - the opponent level picker with a four-bar meter
+ *   - the practice sections as a two-column grid of coloured tiles
+ *   - clock colours: green, then amber (.warn), then red (.low)
+ *
+ * Mode colours are declared here rather than in theme.css because they stay
+ * the same in both newspaper eras.
+ */
+
+:root {
+  --quick: #1456a8;
+  --quick-ink: #0b3470;
+  --friends: #0a6b46;
+  --friends-ink: #064330;
+  --gold: #f5c518;
+  --amber: #d98a00;
+  --pop: 4px 4px 0 var(--line);
+}
+
+/* ---------- front page lead ------------------------------------------------- */
+
+#home .lead h1 {
+  background: linear-gradient(transparent 62%, rgba(245, 197, 24, 0.55) 62%);
+  display: inline;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+/* ---------- press pass ------------------------------------------------------ */
+
+.pass {
+  position: relative;
+  background: var(--panel);
+  border: 2px solid var(--line);
+  box-shadow: var(--pop);
+  overflow: hidden;
+}
+.pass::after {
+  /* the lanyard hole */
+  content: "";
+  position: absolute;
+  top: 8px;
+  left: 50%;
+  width: 34px;
+  height: 7px;
+  margin-left: -17px;
+  border-radius: 99px;
+  background: var(--bg);
+  border: 2px solid var(--line);
+}
+.pass-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 22px 14px 8px;
+  background: var(--spot);
+  color: #fff;
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.pass-body {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  padding: 14px 14px 12px;
+}
+.pass-body .field {
+  min-width: 0;
+}
+.pass .me-btn .avatar {
+  background: var(--bg);
+  border: 2px solid var(--line);
+  padding: 4px;
+  box-sizing: content-box;
+}
+.name-wrap {
+  display: flex;
+  min-width: 0;
+}
+.name-wrap input[type="text"] {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  border-right: 0;
+}
+.name-wrap .name-btn {
+  flex: none;
+  width: 48px;
+  justify-content: center;
+  padding: 0;
+  background: var(--gold);
+  border: var(--bw) solid var(--line);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.name-wrap .name-btn .pix-icon {
+  width: 22px;
+  height: 22px;
+}
+.name-wrap .name-btn:hover .pix-icon {
+  animation: spin-dice 0.4s steps(4);
+}
+.name-wrap .name-btn:active {
+  transform: translateY(2px);
+}
+@keyframes spin-dice {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.pass-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  border-top: 2px dashed var(--line);
+}
+.stat {
+  display: grid;
+  grid-template-columns: auto auto;
+  justify-content: center;
+  align-items: center;
+  column-gap: 6px;
+  row-gap: 3px;
+  padding: 10px 4px 11px;
+  text-align: center;
+}
+.stat + .stat {
+  border-left: var(--bw) solid var(--line);
+}
+.stat .pix-icon {
+  width: 22px;
+  height: 22px;
+}
+.stat b {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stat span {
+  grid-column: 1 / -1;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ---------- today's edition ------------------------------------------------- */
+
+.edition-card {
+  position: relative;
+  background: var(--ink);
+  color: var(--on-accent);
+  padding: 18px 16px 16px;
+  box-shadow: 4px 4px 0 var(--spot);
+  overflow: hidden;
+}
+.edition-card::before {
+  /* a faint halftone across the card */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.09) 1px, transparent 1.4px);
+  background-size: 7px 7px;
+  pointer-events: none;
+}
+.edition-card > * {
+  position: relative;
+}
+.ed-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.ed-top .pix-icon {
+  width: 22px;
+  height: 22px;
+}
+.edition-card .kick {
+  color: var(--gold);
+}
+.ed-title {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 44px;
+  line-height: 0.9;
+  text-transform: uppercase;
+  margin: 0;
+}
+[data-era="old"] .ed-title {
+  text-transform: none;
+}
+.ed-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.ed-tag {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 3px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+}
+.ed-tag:nth-child(3n + 1) {
+  background: var(--spot);
+  border-color: var(--spot);
+}
+.edition-card .btn.ed-cta {
+  background: var(--gold);
+  color: #111;
+  border-color: var(--gold);
+  box-shadow: 4px 4px 0 var(--spot);
+}
+.edition-card .small {
+  color: rgba(255, 255, 255, 0.72);
+  margin: 0;
+}
+
+/* ---------- mode cards ------------------------------------------------------ */
+
+.mode {
+  --mode: var(--quick);
+  --mode-ink: var(--quick-ink);
+  background: var(--panel);
+  border: 2px solid var(--line);
+  box-shadow: 4px 4px 0 var(--mode);
+  padding: 0 14px 14px;
+}
+.mode-friends {
+  --mode: var(--friends);
+  --mode-ink: var(--friends-ink);
+}
+.mode-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 -14px;
+  padding: 12px 14px;
+  background: var(--mode);
+  color: #fff;
+}
+.mode-head .pix-icon {
+  width: 30px;
+  height: 30px;
+  flex: none;
+  background: rgba(255, 255, 255, 0.16);
+  padding: 4px;
+  box-sizing: content-box;
+}
+.mode-head div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.mode-head b {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 26px;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+.mode-head span {
+  font-size: 14px;
+  opacity: 0.88;
+}
+.mode .btn {
+  background: var(--mode);
+  border-color: var(--mode);
+  color: #fff;
+  box-shadow: 4px 4px 0 var(--line);
+}
+.mode .btn:hover:not(:disabled) {
+  box-shadow: 6px 6px 0 var(--line);
+}
+.mode .btn:active:not(:disabled) {
+  box-shadow: 1px 1px 0 var(--line);
+}
+.mode .small {
+  margin: 0;
+}
+.mode .small:empty {
+  display: none;
+}
+
+/* ---------- opponent levels ------------------------------------------------- */
+
+.levels {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 6px;
+}
+.level {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 9px 0 7px;
+  background: var(--bg);
+  border: var(--bw) solid var(--line);
+  color: var(--ink);
+  cursor: pointer;
+  transition:
+    transform 0.12s,
+    box-shadow 0.12s,
+    background 0.12s;
+}
+.level:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 3px 0 var(--line);
+}
+.level.on {
+  background: var(--quick);
+  border-color: var(--quick-ink);
+  color: #fff;
+  box-shadow: 0 3px 0 var(--quick-ink);
+  transform: translateY(-2px);
+}
+.level-name {
+  font-family: var(--display);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.level-meter {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+.level-meter i {
+  width: 4px;
+  background: currentColor;
+  opacity: 0.22;
+}
+.level-meter i:nth-child(1) {
+  height: 25%;
+}
+.level-meter i:nth-child(2) {
+  height: 50%;
+}
+.level-meter i:nth-child(3) {
+  height: 75%;
+}
+.level-meter i:nth-child(4) {
+  height: 100%;
+}
+.level-meter i.full {
+  opacity: 1;
+}
+.level:not(.on) .level-meter i.full {
+  background: var(--quick);
+}
+.level:not(.on):nth-child(5) .level-meter i.full {
+  background: var(--spot);
+}
+.level-meter.any i {
+  opacity: 0.55;
+  animation: meter 1.6s steps(1) infinite;
+}
+.level-meter.any i:nth-child(2) {
+  animation-delay: 0.4s;
+}
+.level-meter.any i:nth-child(3) {
+  animation-delay: 0.8s;
+}
+.level-meter.any i:nth-child(4) {
+  animation-delay: 1.2s;
+}
+@keyframes meter {
+  0% {
+    opacity: 1;
+  }
+  25% {
+    opacity: 0.25;
+  }
+}
+.level-blurb {
+  font-style: italic;
+  color: var(--ink-2);
+  min-height: 1.3em;
+}
+
+/* ---------- practice tiles -------------------------------------------------- */
+
+#index.tiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  border-top: 0;
+}
+.tiles .sec {
+  --tile: var(--spot);
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-height: 112px;
+  padding: 12px 11px 11px;
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  border-top: 6px solid var(--tile);
+  box-shadow: 3px 3px 0 var(--line);
+  text-align: left;
+}
+.tiles .sec:first-child {
+  grid-column: 1 / -1;
+  min-height: 0;
+  background: var(--tile);
+  color: #fff;
+  border-color: var(--line);
+}
+.tiles .sec:first-child .c,
+.tiles .sec:first-child .d {
+  color: rgba(255, 255, 255, 0.85);
+}
+.tiles .sec:hover {
+  padding-left: 11px;
+  background: var(--panel);
+  box-shadow: 5px 5px 0 var(--tile);
+  transform: translate(-2px, -2px);
+}
+.tiles .sec:first-child:hover {
+  background: var(--tile);
+}
+.tiles .sec:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0 var(--line);
+}
+.tiles .sec .t {
+  font-size: 19px;
+  line-height: 0.98;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+[data-era="new"] .tiles .sec .t {
+  font-size: 19px;
+}
+.tiles .sec .c {
+  order: -1;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--tile);
+}
+.tiles .sec .d {
+  font-size: 13.5px;
+  line-height: 1.25;
+}
+
+/* ---------- ratings legend -------------------------------------------------- */
+
+.marks .mark {
+  background: var(--panel);
+  border: var(--bw) solid var(--line);
+  box-shadow: 3px 3px 0 var(--line);
+}
+
+/* ---------- match clock ----------------------------------------------------- */
+
+.clock .fill {
+  background: var(--friends);
+  transition: background 0.3s;
+}
+.clock:has(.sec-n.warn) .fill {
+  background: var(--amber);
+}
+.clock .sec-n.warn {
+  color: var(--amber);
+}
+.clock:has(.sec-n.low) .fill {
+  background: var(--spot);
+}
+.clock .bar {
+  height: 12px;
+}
+
+/* ---------- quick match: level on the opponent card ------------------------- */
+
+#search .vs-sub {
+  font-weight: 700;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .level-meter.any i,
+  .name-wrap .name-btn:hover .pix-icon {
+    animation: none;
+  }
+  .tiles .sec:hover,
+  .level:hover {
+    transform: none;
+  }
+}

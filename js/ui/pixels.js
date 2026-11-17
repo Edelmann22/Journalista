@@ -141,6 +141,56 @@ const SPRITE_ICONS = {
     "owwwwwwo",
     "oooooooo",
   ],
+  bolt: [
+    "....oo..",
+    "...oyo..",
+    "..oyo...",
+    ".oyyyyo.",
+    "..oyyo..",
+    "..oyo...",
+    ".oyo....",
+    ".oo.....",
+  ],
+  people: [
+    ".oo..oo.",
+    "owwoowwo",
+    "owwoowwo",
+    ".oo..oo.",
+    "obboobbo",
+    "obbbbbbo",
+    "obbbbbbo",
+    "oooooooo",
+  ],
+  paper: [
+    "oooooooo",
+    "owwwwwwo",
+    "orrrrrro",
+    "owwwwwwo",
+    "owoowowo",
+    "owwwwwwo",
+    "owoooowo",
+    "oooooooo",
+  ],
+  flame: [
+    "...o....",
+    "..oro...",
+    "..orro..",
+    ".orrrro.",
+    ".oryyro.",
+    "oryyyyro",
+    ".oryyro.",
+    "..oooo..",
+  ],
+  trophy: [
+    "oooooooo",
+    "oyyyyyyo",
+    "ooyyyyoo",
+    ".oyyyyo.",
+    "..oyyo..",
+    "...oo...",
+    "..oyyo..",
+    ".oooooo.",
+  ],
   watch: [
     "...oo...",
     "..oooo..",
@@ -336,11 +386,13 @@ function avatar(look, mood, cls) {
   return img;
 }
 
+/** Colours an icon grid may use: ink, white, red, yellow, blue. */
+const ICON_COLOURS = { o: INK, w: "#ffffff", r: "#e0342b", y: "#f5c518", b: "#3b7dd8" };
+
 /** Data URL of a small icon from SPRITE_ICONS. */
 function iconSrc(name) {
   const key = "icon:" + name;
-  if (!SPRITE_CACHE.has(key))
-    SPRITE_CACHE.set(key, paintGrid(SPRITE_ICONS[name], { o: INK, w: "#ffffff" }));
+  if (!SPRITE_CACHE.has(key)) SPRITE_CACHE.set(key, paintGrid(SPRITE_ICONS[name], ICON_COLOURS));
   return SPRITE_CACHE.get(key);
 }
 

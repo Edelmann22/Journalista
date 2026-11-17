@@ -265,7 +265,7 @@ ADDC({
     ),
     P(
       "Name a club competition run by UEFA",
-      "Past or present, men's or women's",
+      "Past or present",
       "comp",
       [
         ["Champions League", 1, "european cup|ucl|uefa champions league"],
@@ -275,7 +275,6 @@ ADDC({
         ["Cup Winners' Cup", 2, "european cup winners cup|uefa cup winners cup|cwc"],
         ["Intertoto Cup", 3, "uefa intertoto cup"],
         ["UEFA Youth League", 3, "youth league"],
-        ["Women's Champions League", 3, "uefa womens champions league|womens cl"],
       ],
       O,
     ),

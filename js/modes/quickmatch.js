@@ -87,13 +87,70 @@ function qmRecord() {
   return store.qm;
 }
 
-/** Show the record under the Find button. Called from renderHome(). */
+/** The opponent level the player picked: "any" or a key of BOT_LEVELS. */
+function qmLevel() {
+  return store.qmLevel && (store.qmLevel === "any" || BOT_LEVELS[store.qmLevel])
+    ? store.qmLevel
+    : "any";
+}
+
+/** The record against one level, created on first use. */
+function qmLevelRecord(level) {
+  store.qmBy = store.qmBy || {};
+  store.qmBy[level] = store.qmBy[level] || { w: 0, l: 0, d: 0 };
+  return store.qmBy[level];
+}
+
+/**
+ * Count a quick match: overall and against the opponent's level.
+ *
+ * @param {"w"|"l"|"d"} result
+ */
+function qmTally(result) {
+  qmRecord()[result]++;
+  if (qm && qm.opp) qmLevelRecord(qm.opp.level)[result]++;
+  save(store);
+}
+
+/** "3 won · 1 lost" */
+function recordText(r) {
+  return r.w + " won · " + r.l + " lost" + (r.d ? " · " + r.d + " drawn" : "");
+}
+
+/** The level picker, its description and the record line. Called from renderHome(). */
 function renderQuickHome() {
-  const r = qmRecord(),
-    played = r.w + r.l + r.d;
-  $("qmRecord").textContent = played
-    ? "Your record: " + r.w + " won · " + r.l + " lost" + (r.d ? " · " + r.d + " drawn" : "")
-    : "";
+  const sel = qmLevel(),
+    box = $("qmLevels");
+  box.innerHTML = "";
+  [["any", "Any", 0]]
+    .concat(BOT_LEVEL_ORDER.map((k, i) => [k, BOT_LEVELS[k].name, i + 1]))
+    .forEach(([key, name, bars]) => {
+      const b = el("button", "level" + (key === sel ? " on" : ""));
+      b.type = "button";
+      b.setAttribute("role", "radio");
+      b.setAttribute("aria-checked", String(key === sel));
+      const meter = el("span", "level-meter");
+      for (let i = 1; i <= 4; i++) meter.appendChild(el("i", i <= bars ? "full" : ""));
+      if (!bars) meter.classList.add("any");
+      b.append(meter, el("span", "level-name", name));
+      b.addEventListener("click", () => {
+        store.qmLevel = key;
+        save(store);
+        renderQuickHome();
+      });
+      box.appendChild(b);
+    });
+  $("qmLevelBlurb").textContent =
+    sel === "any"
+      ? "Matched to your form: win and the reporters get better."
+      : BOT_LEVELS[sel].blurb;
+  const all = qmRecord(),
+    lv = sel === "any" ? all : qmLevelRecord(sel),
+    played = lv.w + lv.l + lv.d;
+  $("qmRecord").textContent = !played
+    ? ""
+    : (sel === "any" ? "Your record: " : "Against " + BOT_LEVELS[sel].name + "s: ") +
+      recordText(lv);
   $("qmMsg").textContent = "";
 }
 
@@ -113,13 +170,14 @@ function setOpp(o) {
   img.classList.remove("searching");
   img.src = avatarSrc(o.look, "happy");
   $("qsOppName").textContent = oppName(o);
-  $("qsOppSub").textContent = "from " + o.place;
+  $("qsOppSub").textContent = o.levelName + " · from " + o.place;
   replay(img, "hop");
 }
 
-/** How long the queue takes: usually a few seconds, sometimes much longer. */
+/** How long the queue takes: usually a few seconds, sometimes much longer. Fewer legends are online. */
 function searchWait() {
-  return Math.min(22, 3.5 - Math.log(1 - Math.random()) * 5) * 1000;
+  const f = { rookie: 0.8, pundit: 0.9, veteran: 1.1, legend: 1.4 }[qmLevel()] || 1;
+  return Math.min(26, (3.5 - Math.log(1 - Math.random()) * 5) * f) * 1000;
 }
 
 /** Start looking for an opponent. */
@@ -154,7 +212,7 @@ function quickSearch() {
       if (qm && qm.phase === "search") $("qsStatus").textContent = text;
     }, at * 1000),
   );
-  qmLater(() => quickFound(makeOpponent(qmRecord()), chance(0.12)), searchWait());
+  qmLater(() => quickFound(makeOpponent(qmLevel(), qmRecord()), chance(0.12)), searchWait());
 }
 
 /**
@@ -177,7 +235,7 @@ function quickFound(o, declines) {
         $("qsHead").textContent = "Finding you an opponent";
         $("qsStatus").textContent = oppName(o) + " didn't accept. Back in the queue.";
         setOpp(null);
-        qmLater(() => quickFound(makeOpponent(qmRecord()), false), rnd(3, 9) * 1000);
+        qmLater(() => quickFound(makeOpponent(qmLevel(), qmRecord()), false), rnd(3, 9) * 1000);
       },
       rnd(2, 5) * 1000,
     );
@@ -428,13 +486,9 @@ function quickRecord(rows) {
   if (!qm || qm.counted) return;
   qm.counted = true;
   const me = rows.find((r) => r.id === myId),
-    them = rows.find((r) => r.id !== myId),
-    r = qmRecord();
+    them = rows.find((r) => r.id !== myId);
   if (!me || !them) return;
-  if (me.total > them.total) r.w++;
-  else if (me.total < them.total) r.l++;
-  else r.d++;
-  save(store);
+  qmTally(me.total > them.total ? "w" : me.total < them.total ? "l" : "d");
 }
 
 /** The opponent quit mid-match: the player wins by walkover. */
@@ -447,8 +501,7 @@ function quickWalkover() {
   qm.phase = "over";
   if (!qm.counted) {
     qm.counted = true;
-    qmRecord().w++;
-    save(store);
+    qmTally("w");
   }
   setEra(null);
   const name = oppName(qm.opp);
@@ -490,8 +543,7 @@ function quickAbandon() {
   if (!qm) return;
   if (!qm.counted && ["round", "board", "countdown"].includes(qm.phase) && mp && mp.n > 0) {
     qm.counted = true;
-    qmRecord().l++;
-    save(store);
+    qmTally("l");
   }
   quickTimersClear();
   qm = null;

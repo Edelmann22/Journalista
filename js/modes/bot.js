@@ -6,10 +6,12 @@
  * simulated reporter that behaves like a person rather than a database:
  *
  *   - a name, a home town and a pixel look, like any other player
- *   - a skill level, matched to how the player has been doing
+ *   - a level (Rookie, Pundit, Veteran, Legend) chosen by the player or
+ *     matched to their form, which sets how much they know and how fast they are
  *   - a taste: young reporters know modern football better, veterans the
  *     archive, and everyone has a favourite section
- *   - patchy knowledge: common answers come to mind easily, rare ones seldom
+ *   - patchy knowledge: common answers come to mind easily, rare ones seldom,
+ *     only a handful at a time, and now and then nothing at all
  *   - human timing: reading the prompt, thinking, typing letter by letter,
  *     slowing down as the obvious answers run out, the odd blank moment
  *   - wrong guesses (you see them "typing" but no answer lands)
@@ -165,8 +167,66 @@ const BOT_REPLIES = [
 /** Now and then, an answer to anything else. */
 const BOT_SMALL_TALK = ["haha", "true", "ok", "fair", "lol", "yeah", "same"];
 
-/** Chance of knowing an answer of each tier before skill and taste are applied. */
-const BOT_KNOW = [0, 0.9, 0.58, 0.3, 0.12];
+/**
+ * Opponent levels. Nobody knows everything: each level knows a share of the
+ * answers in each tier (know[tier]), can only hold so many in their head at
+ * once (cap), sometimes draws a complete blank on a prompt (blank), types at
+ * a pace (speed: higher is slower) and fumbles wrong guesses (wrong).
+ */
+const BOT_LEVELS = {
+  rookie: {
+    name: "Rookie",
+    blurb: "Knows the big names, types slowly, often stuck",
+    know: [0, 0.5, 0.15, 0.04, 0.01],
+    cap: 3,
+    blank: 0.3,
+    speed: [1.35, 1.7],
+    wrong: [0.3, 0.45],
+  },
+  pundit: {
+    name: "Pundit",
+    blurb: "A decent fan: the obvious answers and a few more",
+    know: [0, 0.72, 0.32, 0.12, 0.04],
+    cap: 5,
+    blank: 0.15,
+    speed: [1.05, 1.3],
+    wrong: [0.2, 0.32],
+  },
+  veteran: {
+    name: "Veteran",
+    blurb: "Sharp, quick and knows a few deep cuts",
+    know: [0, 0.88, 0.52, 0.26, 0.1],
+    cap: 8,
+    blank: 0.07,
+    speed: [0.88, 1.08],
+    wrong: [0.12, 0.22],
+  },
+  legend: {
+    name: "Legend",
+    blurb: "Encyclopaedic and fast. Still not perfect",
+    know: [0, 0.95, 0.7, 0.42, 0.22],
+    cap: 11,
+    blank: 0.03,
+    speed: [0.74, 0.9],
+    wrong: [0.06, 0.14],
+  },
+};
+
+/** Level keys from weakest to strongest. */
+const BOT_LEVEL_ORDER = ["rookie", "pundit", "veteran", "legend"];
+
+/**
+ * The level for "Any level": follows the player's form, with some luck of the draw.
+ *
+ * @param {{w: number, l: number}} [record]
+ */
+function matchedLevel(record) {
+  const r = record || { w: 0, l: 0 };
+  const form = (r.w || 0) - (r.l || 0);
+  let i = form <= -2 ? 0 : form <= 1 ? 1 : form <= 3 ? 2 : 3;
+  if (chance(0.3)) i += chance(0.5) ? 1 : -1;
+  return BOT_LEVEL_ORDER[Math.max(0, Math.min(3, i))];
+}
 
 /* ---------- small random helpers -------------------------------------------- */
 
@@ -182,24 +242,26 @@ const pickOne = (list) => list[Math.floor(Math.random() * list.length)];
 /* ---------- making an opponent ---------------------------------------------- */
 
 /**
- * A new opponent profile. Skill drifts towards the player's form, so a
- * player on a winning run meets stronger reporters.
+ * A new opponent profile.
  *
+ * @param {string} level  a key of BOT_LEVELS, or "any" to match the player's form
  * @param {{w: number, l: number}} [record]  the player's quick-match record
  */
-function makeOpponent(record) {
-  const r = record || { w: 0, l: 0 };
-  const form = Math.max(-4, Math.min(4, (r.w || 0) - (r.l || 0)));
+function makeOpponent(level, record) {
+  const key = BOT_LEVELS[level] ? level : matchedLevel(record),
+    L = BOT_LEVELS[key];
   return {
     id: "q" + Math.random().toString(36).slice(2, 10),
     name: pickOne(BOT_NAMES),
     place: pickOne(BOT_PLACES),
     look: randomLook(),
-    skill: Math.max(0.3, Math.min(0.95, 0.6 + form * 0.07 + rnd(-0.15, 0.15))),
-    speed: rnd(0.8, 1.25),
+    level: key,
+    levelName: L.name,
+    sharp: rnd(0.85, 1.15), // two reporters at one level are never quite equal
+    speed: rnd(L.speed[0], L.speed[1]),
     style: pickOne(["young", "young", "veteran", "all-round"]),
     favourite: pickOne(CATS).id,
-    wrong: rnd(0.12, 0.3),
+    wrong: rnd(L.wrong[0], L.wrong[1]),
     ping: Math.round(rnd(24, 95)),
   };
 }
@@ -263,14 +325,23 @@ function createBot(o, deliver) {
             : 1.2
           : 1;
     const favF = CATS[m.pid[0]].id === o.favourite ? 1.3 : 1;
-    const mult = (0.45 + o.skill * 0.75) * eraF * favF;
+    const L = BOT_LEVELS[o.level];
+    const mult = o.sharp * eraF * favF;
 
-    // What comes to mind, roughly most obvious first.
+    // What comes to mind, roughly most obvious first. Nobody recalls more than
+    // a handful under the clock, and sometimes a prompt draws a total blank.
+    const blank = chance(L.blank / Math.min(eraF * favF, 1.3));
+    const cap = blank ? (chance(0.5) ? 0 : 1) : Math.max(1, L.cap + Math.round(rnd(-1.5, 1.5)));
     const known = p.answers
-      .filter((a) => chance(Math.min(0.97, BOT_KNOW[a[1]] * mult)))
+      .filter((a) => chance(Math.min(0.97, L.know[a[1]] * mult)))
       .map((a) => ({ a, k: a[1] + rnd(0, 2.2) }))
       .sort((x, y) => x.k - y.k)
-      .map((x) => x.a);
+      .map((x) => x.a)
+      .slice(0, cap);
+    // Stuck: a couple of wrong tries, then nothing.
+    if (!known.length)
+      for (let i = 0, t0 = rnd(6, 14); i < (chance(0.6) ? 2 : 1); i++, t0 += rnd(6, 12))
+        typing(m.n, t0 * o.speed, typeTime(Math.round(rnd(5, 11))));
 
     const end = m.secs - 0.5;
     let t = (1.5 + p.text.length / 30 + rnd(0, 2)) * o.speed; // reading the prompt

@@ -577,6 +577,7 @@ function mpTick() {
     s = Math.ceil(left / 1000);
   $("mpFill").style.transform = "scaleX(" + left / (r.secs * 1000) + ")";
   $("mpSec").classList.toggle("low", s <= 7);
+  $("mpSec").classList.toggle("warn", s > 7 && s <= 15);
   $("mpSec").textContent = s;
   if (!r.joker && !r.found.length && left > 0 && jokerDue(r.secs, left)) {
     r.joker = true;
