@@ -56,6 +56,7 @@ Journalista/
     │   ├── dom.js                 DOM helpers, view switching, era styling
     │   ├── pixels.js              Pixel-art reporter generator (sprites as editable text grids)
     │   ├── effects.js             Confetti, score pop-ups, stamps, flashes, screen shake
+    │   ├── daily-jokers.js        Red, green and blue jokers, once each per day
     │   └── home.js                Front-page ticker, editor mascot, "New look" button
     ├── modes/
     │   ├── solo.js                Daily seven and practice rounds
@@ -104,9 +105,14 @@ Every file starts with a comment that explains what it contains.
   sometimes answers (a greeting, "gg", where they are from, a rematch), after a pause and a
   "typing…", and sometimes ignores it, especially mid-round.
 - **Matching.** Typos, accents and nicknames are forgiven, and a surname alone counts. When
-  two answers share a surname (Kasper and Peter Schmeichel), the surname alone asks the player
-  to type the full name instead of guessing. Particles count too: "van Persie" and "Persie" both
+  answers share a surname (Kasper and Peter Schmeichel, the de Jongs), the surname files all of
+  them: every one counts in a race, the most common one is scored in solo, and in Hot seat you
+  claim the most common one still free. Particles count too: "van Persie" and "Persie" both
   work.
+- **Daily jokers.** Three jokers, once each per day, refilled at midnight: red shows the full
+  name of a Front page answer, green the first name of a Back page answer, blue the surname of a
+  Good line answer. A joker is not spent if the prompt has no answer of its colour left. Solo,
+  Newsroom race and quick match (`js/ui/daily-jokers.js`).
 - **Pixel reporters.** Each player's look is one number that seeds hair, skin, kit and
   accessories, so it draws the same on every device. Sprites are text grids in
   `js/ui/pixels.js`, easy to edit by hand. Moods (idle, happy, sad, shock) react to the game.

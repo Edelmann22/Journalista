@@ -230,6 +230,7 @@ function ask() {
   game.open = true;
   game.joker = false;
   $("joker").hidden = true;
+  resetDailyJokers("djSolo", soloJokerTarget);
   cancelAnimationFrame(raf);
   tick();
 }
@@ -255,6 +256,11 @@ function tick() {
   raf = requestAnimationFrame(tick);
 }
 
+/** What the daily jokers act on in solo play: the open prompt (one answer, none found yet). */
+function soloJokerTarget() {
+  return game && game.open ? { prompt: promptOf(game), found: [] } : null;
+}
+
 /** Check a typed answer: a match settles the prompt, a miss shakes the card. */
 wire("form", "answer", () => {
   if (!game || !game.open) return;
@@ -264,14 +270,12 @@ wire("form", "answer", () => {
     $("answer").focus();
     return;
   }
-  const hit = findAnswer(promptOf(game), raw);
-  if (hit) {
-    settle(hit);
+  const hits = findAnswers(promptOf(game), raw);
+  if (hits.length) {
+    settle(hits[0], undefined, hits);
     return;
   }
-  $("say").textContent = isAmbiguous(promptOf(game), raw)
-    ? "More than one answer is called “" + raw + "”. Type the full name."
-    : "“" + raw + "” does not count. Try another.";
+  $("say").textContent = "“" + raw + "” does not count. Try another.";
   shakeEl($("card"));
   $("answer").select();
 });
@@ -284,8 +288,11 @@ $("skip").addEventListener("click", () => {
  *
  * @param {Array|null} hit  the matched answer, or null for a miss
  * @param {string} [why]    shown instead of an answer on a miss
+ * @param {Array[]} [all]   every answer a shared surname matched; scored as the most common
  */
-function settle(hit, why) {
+function settle(hit, why, all) {
+  all = all || (hit ? [hit] : []);
+  const names = all.map((a) => a[0]).join(" & ");
   game.open = false;
   cancelAnimationFrame(raf);
   const p = promptOf(game),
@@ -295,7 +302,7 @@ function settle(hit, why) {
     pts = TIER[tier].pts + bonus,
     before = game.score;
   game.score += pts;
-  game.rows.push({ q: p.text, a: hit ? hit[0] : why || "No answer", tier, pts });
+  game.rows.push({ q: p.text, a: hit ? names : why || "No answer", tier, pts });
   drawBoard();
   $("ask").hidden = true;
   $("reveal").hidden = false;
@@ -308,13 +315,11 @@ function settle(hit, why) {
   $("vRate").textContent = TIER[tier].mark;
   $("vKind").textContent = TIER[tier].name;
   $("vAns").textContent = hit
-    ? hit[0] + (bonus ? " · +" + bonus + " for speed" : "")
+    ? names + (bonus ? " · +" + bonus + " for speed" : "")
     : why || "No answer";
   $("vPts").textContent = "+" + pts;
   $("next").textContent = game.i === game.ids.length - 1 ? "Close the edition" : "Next prompt";
-  tierGroups($("groups"), p, (a) =>
-    el("span", "chip" + (hit && a[0] === hit[0] ? " you" : ""), a[0]),
-  );
+  tierGroups($("groups"), p, (a) => el("span", "chip" + (all.includes(a) ? " you" : ""), a[0]));
   window.scrollTo(0, 0);
   $("next").focus({ preventScroll: true });
   soloReact(tier, pts, before);

@@ -122,45 +122,73 @@ function surnameClashes(prompt) {
 }
 
 /**
- * True if the input is a surname that several answers share, so the player
- * should type the full name. Used for a clearer message than "does not count".
+ * The answers whose surname is this input: "neville" → Gary and Phil Neville.
+ * Counts the plain last word and the surname with particles ("van persie").
+ * Players known by one name (NO_SURNAME) match that name; prompt.noSurname ones never match.
+ *
+ * @param {object} prompt
+ * @param {string} g  normalised input
+ * @returns {Array[]}
  */
-function isAmbiguous(prompt, raw) {
-  const g = norm(raw);
-  return (
-    prompt.kind === "player" &&
-    surnameClashes(prompt).has(g) &&
-    !prompt.answers.some((a) => aliasesFor(prompt, a).includes(g))
-  );
+function surnameMatches(prompt, g) {
+  return prompt.answers.filter((a) => {
+    const words = norm(a[0]).split(" ");
+    if (NO_SURNAME.has(a[0])) return words[0] === g; // "Ronaldo" for Ronaldo Nazário
+    if (prompt.noSurname && prompt.noSurname.has(a[0])) return false;
+    if (words.length < 2) return false;
+    let i = words.length - 1;
+    if (words[i] === g) return true;
+    while (i > 1 && SURNAME_PARTICLES.has(words[i - 1])) i--;
+    return words.slice(i).join(" ") === g;
+  });
 }
 
 /**
  * Match the player's raw input against a prompt's answers.
- * An exact alias match wins; a surname several answers share matches nothing
- * (see isAmbiguous); otherwise the closest alias within the typo allowance
- * (1 edit from 5 letters, 2 edits from 9 letters) wins.
+ *
+ * A surname several answers share ("neville", "silva", "ronaldo") files all of
+ * them, most common first, including an answer that is called just that.
+ * Otherwise an exact alias match wins, then the closest alias within the typo
+ * allowance (1 edit from 5 letters, 2 edits from 9 letters). A typo of a
+ * shared surname ("nevile") also files everyone with it.
  *
  * @param {object} prompt
  * @param {string} raw  what the player typed
- * @returns {Array|null}  the matched answer, or null
+ * @returns {Array[]}  the matched answers, most common first; empty on a miss
  */
-function findAnswer(prompt, raw) {
+function findAnswers(prompt, raw) {
   const g = norm(raw);
-  if (!g) return null;
-  for (const ans of prompt.answers) if (aliasesFor(prompt, ans).includes(g)) return ans;
-  if (isAmbiguous(prompt, raw)) return null; // a shared surname: the player must type the full name
+  if (!g) return [];
+  const exact = prompt.answers.filter((a) => aliasesFor(prompt, a).includes(g));
+  const shared = (s) => {
+    const all = new Set([...exact, ...surnameMatches(prompt, s)]);
+    return [...all].sort((x, y) => x[1] - y[1]);
+  };
+  const isPlayer = prompt.kind === "player",
+    clash = isPlayer ? surnameClashes(prompt) : new Set();
+  if (isPlayer && (clash.has(g) || surnameMatches(prompt, g).length > 1)) {
+    const all = shared(g);
+    if (all.length) return all;
+  }
+  if (exact.length) return exact.slice(0, 1);
   let best = null,
     bestD = 9;
-  for (const ans of prompt.answers) {
-    for (const al of aliasesFor(prompt, ans)) {
-      const allow = al.length >= 9 ? 2 : al.length >= 5 ? 1 : 0;
-      if (!allow) continue;
-      const d = lev(g, al);
-      if (d <= allow && d < bestD) {
-        best = ans;
-        bestD = d;
-      }
+  const consider = (al, hit) => {
+    const allow = al.length >= 9 ? 2 : al.length >= 5 ? 1 : 0;
+    if (!allow) return;
+    const d = lev(g, al);
+    if (d <= allow && d < bestD) {
+      best = hit;
+      bestD = d;
     }
-  }
-  return best;
+  };
+  for (const ans of prompt.answers) for (const al of aliasesFor(prompt, ans)) consider(al, [ans]);
+  for (const s of clash) consider(s, s);
+  if (typeof best === "string") return shared(best);
+  return best || [];
+}
+
+/** The single best match, or null. Kept for callers that need one answer. */
+function findAnswer(prompt, raw) {
+  return findAnswers(prompt, raw)[0] || null;
 }

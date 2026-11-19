@@ -561,6 +561,7 @@ function startRound(m) {
   $("mpAnswer").value = "";
   $("mpAnswer").disabled = false;
   $("mpJoker").hidden = true;
+  resetDailyJokers("djMp", mpJokerTarget);
   renderLive();
   show("mp");
   replay($("mpCard"), "enter");
@@ -603,38 +604,52 @@ wire("mpForm", "mpAnswer", () => {
     inp.focus();
     return;
   }
-  const hit = findAnswer(r.p, raw);
-  if (!hit) {
+  const hits = findAnswers(r.p, raw);
+  if (!hits.length) {
     say.className = "say";
-    say.textContent = isAmbiguous(r.p, raw)
-      ? "More than one answer is called “" + raw + "”. Type the full name."
-      : "“" + raw + "” does not count.";
+    say.textContent = "“" + raw + "” does not count.";
     shakeEl($("mpCard"));
     inp.select();
     return;
   }
-  if (r.found.some((a) => a[0] === hit[0])) {
+  // A shared surname ("Neville") files every player who has it.
+  const fresh = hits.filter((h) => !r.found.some((a) => a[0] === h[0]));
+  if (!fresh.length) {
     say.className = "say";
-    say.textContent = "You already have " + hit[0] + ".";
+    say.textContent = "You already have " + hits.map((h) => h[0]).join(" & ") + ".";
     inp.value = "";
     return;
   }
-  const before = r.pts,
-    tier = TIER[hit[1]];
-  r.found.push(hit);
-  r.pts += tier.pts;
+  const before = r.pts;
+  let gained = 0,
+    lastChip = null;
+  fresh.forEach((hit) => {
+    const tier = TIER[hit[1]];
+    r.found.push(hit);
+    r.pts += tier.pts;
+    gained += tier.pts;
+    const chip = el("span", "chip you new", hit[0]);
+    chip.style.setProperty("--c", tier.c);
+    $("mpMine").prepend(chip);
+    if (hit[1] === 4) lastChip = chip;
+  });
+  const top = TIER[Math.max(...fresh.map((h) => h[1]))];
   say.className = "say ok";
-  say.textContent = hit[0] + " · " + tier.name + " +" + tier.pts;
-  const chip = el("span", "chip you new", hit[0]);
-  chip.style.setProperty("--c", tier.c);
-  $("mpMine").prepend(chip);
+  say.textContent =
+    fresh.map((h) => h[0]).join(" & ") + (fresh.length > 1 ? "" : " · " + top.name) + " +" + gained;
   countUp($("mpScore"), before, r.pts);
-  popText($("mpScore"), "+" + tier.pts, tier.c);
-  if (hit[1] === 4) confetti(chip, 40);
+  popText($("mpScore"), "+" + gained, top.c);
+  if (lastChip) confetti(lastChip, 40);
   inp.value = "";
   send({ t: "hit", n: mp.n, c: r.found.length, p: r.pts });
   renderLive();
 });
+
+/** What the daily jokers act on in a race: the open round and what you have found. */
+function mpJokerTarget() {
+  const r = mp && mp.round;
+  return r && r.open ? { prompt: r.p, found: r.found.map((a) => a[0]) } : null;
+}
 
 /** How long a "typing…" signal stays on screen without a fresh one. */
 const TYPING_MS = 1800;

@@ -392,15 +392,18 @@ wire("tForm", "tAnswer", () => {
     inp.focus();
     return;
   }
-  const hit = findAnswer(t.p, raw),
-    taken = hit && t.used.find((u) => u.a === hit[0]);
-  if (!hit || taken) {
+  // A shared surname claims the most common of those players still free.
+  const hits = findAnswers(t.p, raw),
+    hit = hits.find((h) => !t.used.some((u) => u.a === h[0])),
+    taken = !hit && hits.length && t.used.find((u) => u.a === hits[0][0]);
+  if (!hit) {
     say.className = "say";
     say.textContent = taken
-      ? hit[0] + " is already filed by " + (taken.by === myId ? "you" : nameOf(taken.by)) + "."
-      : isAmbiguous(t.p, raw)
-        ? "More than one answer is called “" + raw + "”. Type the full name."
-        : "“" + raw + "” does not count. Keep going!";
+      ? hits.map((h) => h[0]).join(" & ") +
+        (hits.length > 1 ? " are" : " is") +
+        " already filed" +
+        (hits.length > 1 ? "." : " by " + (taken.by === myId ? "you" : nameOf(taken.by)) + ".")
+      : "“" + raw + "” does not count. Keep going!";
     shakeEl($("tCard"));
     inp.select();
     send({ t: "miss", n: t.n, k: t.k, text: raw.slice(0, 40) });

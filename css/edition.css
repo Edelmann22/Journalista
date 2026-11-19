@@ -515,3 +515,70 @@
     transform: none;
   }
 }
+
+/* ---------- daily jokers (js/ui/daily-jokers.js) ---------------------------- */
+
+.dj {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.dj-label {
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-2);
+  margin-right: 2px;
+}
+.dj-btn {
+  --c: var(--t4);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 10px 6px 8px;
+  background: var(--panel);
+  border: var(--bw) solid var(--c);
+  box-shadow: 2px 2px 0 var(--c);
+  color: var(--ink);
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: transform 0.12s;
+}
+.dj-btn i {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--c);
+}
+.dj-green {
+  --c: var(--t3);
+}
+.dj-blue {
+  --c: var(--t2);
+}
+.dj-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+}
+.dj-btn.used {
+  opacity: 0.4;
+  box-shadow: none;
+  cursor: default;
+  text-decoration: line-through;
+}
+.joker.dj-hint {
+  border-color: var(--c);
+}
+.joker.dj-hint b {
+  color: var(--c);
+}
+.joker.dj-hint.empty .joker-mask {
+  font-size: 15px;
+  letter-spacing: 0;
+}
