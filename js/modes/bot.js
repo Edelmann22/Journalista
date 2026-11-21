@@ -305,14 +305,8 @@ function createBot(o, deliver) {
     for (let k = 0; k < dur; k += 1.2) later(() => say({ t: "typ", n }), (at + k) * 1000);
   };
 
-  /** Decide what this reporter knows about a prompt and play the round out in real time. */
-  function playRound(m) {
-    const p = promptAt(m.pid);
-    if (!p) return;
-    final = null;
-    busyUntil = Date.now() + m.secs * 1000;
-    if (m.n === 1 && chance(0.25))
-      chatLater(pickOne(["gl", "gl hf", "good luck", "let's go"]), 1, 4);
+  /** How much better (or worse) this reporter knows a prompt: their era and favourite section. */
+  function taste(p, pid) {
     const modern = p.era === "new";
     const eraF =
       o.style === "young"
@@ -324,9 +318,20 @@ function createBot(o, deliver) {
             ? 0.8
             : 1.2
           : 1;
-    const favF = CATS[m.pid[0]].id === o.favourite ? 1.3 : 1;
+    const favF = CATS[pid[0]].id === o.favourite ? 1.3 : 1;
+    return { eraF, favF, mult: o.sharp * eraF * favF };
+  }
+
+  /** Decide what this reporter knows about a prompt and play the round out in real time. */
+  function playRound(m) {
+    const p = promptAt(m.pid);
+    if (!p) return;
+    final = null;
+    busyUntil = Date.now() + m.secs * 1000;
+    if (m.n === 1 && chance(0.25))
+      chatLater(pickOne(["gl", "gl hf", "good luck", "let's go"]), 1, 4);
+    const { eraF, favF, mult } = taste(p, m.pid);
     const L = BOT_LEVELS[o.level];
-    const mult = o.sharp * eraF * favF;
 
     // What comes to mind, roughly most obvious first. Nobody recalls more than
     // a handful under the clock, and sometimes a prompt draws a total blank.
@@ -374,6 +379,75 @@ function createBot(o, deliver) {
     // Very rarely someone just quits.
     if (o.walkout && o.walkout.n === m.n)
       later(() => say({ t: "bye" }), Math.min(o.walkout.at, end) * 1000);
+  }
+
+  /* ---------- Hot seat -------------------------------------------------- */
+
+  /** This round's Hot seat memory: what comes to mind, and the last turn played. */
+  let seat = null;
+
+  /** A wrong but plausible guess: an answer to some other prompt of the same kind. */
+  function wrongGuess(p) {
+    for (let i = 0; i < 20; i++) {
+      const c = pickOne(CATS),
+        q = pickOne(c.prompts);
+      if (q.kind !== p.kind || !q.answers.length) continue;
+      const a = pickOne(q.answers)[0];
+      if (!p.answers.some((x) => x[0] === a)) return a.split(" ").pop();
+    }
+    return "";
+  }
+
+  /**
+   * A Hot seat update from the host. On this reporter's turn: think, maybe
+   * try a wrong name, then file an answer nobody has used, unless they cannot
+   * think of one in time and the clock runs out.
+   */
+  function playTurn(m) {
+    const p = promptAt(m.pid);
+    if (!p) return;
+    if (!seat || seat.n !== m.n) {
+      final = null;
+      const L = BOT_LEVELS[o.level],
+        { mult } = taste(p, m.pid);
+      seat = {
+        n: m.n,
+        k: -1,
+        // Turns go on for a while, so no cap here: everything they know, most obvious first.
+        known: p.answers
+          .filter((a) => chance(Math.min(0.97, L.know[a[1]] * mult)))
+          .map((a) => ({ a, k: a[1] + rnd(0, 2.2) }))
+          .sort((x, y) => x.k - y.k)
+          .map((x) => x.a),
+      };
+    }
+    busyUntil = Date.now() + 30000;
+    if (m.active !== o.id || m.k === seat.k) return;
+    seat.k = m.k;
+    const used = new Set((m.used || []).map((u) => u.a)),
+      pick = seat.known.find((a) => !used.has(a[0])),
+      left = m.left / 1000 - 0.5,
+      miss = (at) => {
+        const text = wrongGuess(p);
+        if (text && at < left) later(() => say({ t: "miss", n: m.n, k: m.k, text }), at * 1000);
+      };
+    // Reading the board, sometimes a blank moment.
+    let t = (0.8 + rnd(0, 1.8)) * o.speed + (chance(0.12) ? rnd(1.5, 4) : 0);
+    if (!pick) {
+      // Nothing left in the memory: a desperate try or two, then the clock runs out.
+      miss(t + rnd(1, 3));
+      if (chance(0.5)) miss(t + rnd(4, 6));
+      return;
+    }
+    if (chance(o.wrong)) {
+      t += typeTime(Math.round(rnd(5, 10)));
+      miss(t);
+      t += rnd(0.4, 1.2);
+    }
+    const word = p.kind === "player" && chance(0.6) ? pick[0].split(" ").pop() : pick[0];
+    t += typeTime(word.length);
+    if (t > left) return; // too slow: still typing when the clock ran out
+    later(() => say({ t: "claim", n: m.n, k: m.k, a: pick[0] }), t * 1000);
   }
 
   /** Type a chat message after a pause: "is typing…", then the message. */
@@ -445,7 +519,10 @@ function createBot(o, deliver) {
         if (m.n === 1 && !o.walkout && chance(0.03))
           o.walkout = { n: 1 + Math.floor(Math.random() * (m.total || 1)), at: rnd(8, 30) };
         playRound(m);
-      } else if (m.t === "board") {
+      } else if (m.t === "turn") playTurn(m);
+      else if (m.t === "board") {
+        busyUntil = 0;
+        seat = null;
         if (!m.last) later(() => say({ t: "ready", n: m.n }), rnd(1.5, 7) * 1000);
         else afterMatch(m);
       } else if (m.t === "rematch" && final && !final.agreed) {

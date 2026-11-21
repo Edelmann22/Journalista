@@ -162,9 +162,10 @@
             <img class="pix-icon" data-icon="bolt" alt="" />
             <div>
               <b>Quick match</b>
-              <span>Race a random reporter · three rounds</span>
+              <span>Play a random reporter online · three rounds</span>
             </div>
           </div>
+          <div class="qm-modes" id="qmModes" role="radiogroup" aria-label="Game type"></div>
           <div class="levels" id="qmLevels" role="radiogroup" aria-label="Opponent level"></div>
           <p class="small level-blurb" id="qmLevelBlurb"></p>
           <button class="btn" id="qmFind" type="button">Find an opponent</button>
@@ -468,7 +469,6 @@
         </div>
         <div id="bRanks"></div>
         <button class="btn" id="bNext" type="button">Next round</button>
-        <button class="ghost" id="bNew" type="button" hidden>Find a new opponent</button>
         <p class="small" id="bWait"></p>
         <section class="chatbox stack gap-6" aria-label="Chat">
           <span class="kick">Chat</span>
@@ -491,7 +491,6 @@
           <p class="h" id="bPrompt"></p>
         </div>
         <div class="stack" id="bGroups"></div>
-        <button class="ghost" id="bLeave" type="button">Leave room</button>
       </main>
 
       <!-- ============================================================
@@ -584,6 +583,23 @@
         <button class="ghost" id="again" type="button">Play a practice round</button>
         <button class="ghost" id="back" type="button">Back to start</button>
       </main>
+
+      <!-- ============================================================
+           Play again? Pops up when any game ends and leads straight into the next one.
+           Logic: js/ui/again.js (askAgain), used by solo, multiplayer and quick match
+           ============================================================ -->
+      <section class="again" id="againSheet" role="dialog" aria-labelledby="agTitle" hidden>
+        <button class="again-grip" id="agToggle" type="button" aria-expanded="true">
+          <span id="agTitle">Play again?</span>
+          <span class="again-caret" aria-hidden="true"></span>
+        </button>
+        <div class="again-body stack gap-10">
+          <p class="small" id="agText"></p>
+          <button class="btn" id="agYes" type="button"></button>
+          <button class="ghost" id="agAlt" type="button"></button>
+          <button class="ghost again-no" id="agNo" type="button"></button>
+        </div>
+      </section>
     </div>
 
     <!-- Scripts: classic scripts sharing one global scope, loaded in dependency order -->
@@ -605,6 +621,7 @@
     <script src="js/ui/pixels.js"></script>
     <script src="js/ui/effects.js"></script>
     <script src="js/ui/daily-jokers.js"></script>
+    <script src="js/ui/again.js"></script>
     <script src="js/ui/home.js"></script>
     <script src="js/modes/solo.js"></script>
     <script src="js/modes/multiplayer.js"></script>

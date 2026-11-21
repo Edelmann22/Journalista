@@ -145,6 +145,12 @@ $("randName").addEventListener("click", () => {
   $("qmMsg").textContent = "";
 });
 
+/** Keep a typed name as soon as it changes, so every mode (and the next visit) has it. */
+$("name").addEventListener("input", () => {
+  store.name = $("name").value.trim().slice(0, 14);
+  save(store);
+});
+
 /** Reroll the player's look. */
 $("reroll").addEventListener("click", () => {
   store.look = randomLook();

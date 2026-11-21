@@ -57,6 +57,7 @@ Journalista/
     │   ├── pixels.js              Pixel-art reporter generator (sprites as editable text grids)
     │   ├── effects.js             Confetti, score pop-ups, stamps, flashes, screen shake
     │   ├── daily-jokers.js        Red, green and blue jokers, once each per day
+    │   ├── again.js               "Play again?" sheet shown when any game ends
     │   └── home.js                Front-page ticker, editor mascot, "New look" button
     ├── modes/
     │   ├── solo.js                Daily seven and practice rounds
@@ -86,7 +87,9 @@ Every file starts with a comment that explains what it contains.
   once. Whoever runs out of time is _spiked_ (0 points for the round) and everyone else gets +100
   for surviving.
 - **Quick match.** _Find an opponent_ shows a matchmaking screen, pairs you with a reporter
-  and plays three rounds of Newsroom race, with Ready between rounds and a rematch at the end.
+  and plays three rounds of Newsroom race or Hot seat (you pick the game type on the front
+  page), with Ready between rounds. In Hot seat the reporter takes turns like a person: thinks,
+  sometimes tries a wrong name, files an answer nobody has used, or runs out of time.
   For now the opponent is simulated (`js/modes/bot.js`): a name, a town and a look, and a level
   you pick on the front page (`BOT_LEVELS`): Rookie, Pundit, Veteran or Legend, or _Any_, which
   follows your quick-match record. Each level sets how likely the reporter knows an answer of
@@ -95,6 +98,7 @@ Every file starts with a comment that explains what it contains.
   seldom, better in their favourite section and era), and human timing: reading, thinking,
   typing letter by letter, wrong guesses, blank moments and network delay. After the match they
   may chat, ask for a rematch, turn yours down or leave, and very rarely they quit mid-match.
+  There is no Leave button during a match; closing the app is the way out.
   Set `LABEL_BOTS` in `js/config.js` to show "(bot)" after their name. To pair real players
   later, replace `quickConnect()` in `js/modes/quickmatch.js`; see the comment at its top.
 - **Joker.** Still no correct answer 40 seconds into a prompt? Part of a common answer appears,
@@ -113,6 +117,11 @@ Every file starts with a comment that explains what it contains.
   name of a Front page answer, green the first name of a Back page answer, blue the surname of a
   Good line answer. A joker is not spent if the prompt has no answer of its colour left. Solo,
   Newsroom race and quick match (`js/ui/daily-jokers.js`).
+- **Play again?** When any game ends (practice, daily seven, a room match, a quick match) a
+  sheet asks whether to play again, so one game runs into the next: another practice round or a
+  quick match after solo play; play again or change settings for a room host; a rematch after a
+  quick match, which turns into a new opponent if they leave. The handle folds it down to look at
+  the scoreboard (`js/ui/again.js`).
 - **Pixel reporters.** Each player's look is one number that seeds hair, skin, kit and
   accessories, so it draws the same on every device. Sprites are text grids in
   `js/ui/pixels.js`, easy to edit by hand. Moods (idle, happy, sad, shock) react to the game.

@@ -377,6 +377,7 @@ function finish() {
   store.best = Math.max(store.best || 0, game.score);
   save(store);
   renderResult();
+  askSoloAgain();
 }
 
 /**
@@ -457,6 +458,26 @@ function renderResult() {
   replay($("resAv"), "hop");
   countUp($("resScore"), 0, game.score, 1200);
   if (scaled >= 2100) setTimeout(() => confetti($("resScore"), 120), 400);
+}
+
+/** After a solo game: another round straight away, a quick match, or the front page. */
+function askSoloAgain() {
+  const free = game.mode === "free",
+    sec = free ? game.sec : "all";
+  askAgain({
+    text: free
+      ? "Another seven from " + secName(sec) + "?"
+      : "Today's seven is filed. Keep going with a practice round?",
+    yes: [free ? "Play again" : "Play a practice round", () => start("free", sec)],
+    alt: [
+      "Quick match online",
+      () => {
+        goHome();
+        quickSearch();
+      },
+    ],
+    no: ["Front page", goHome],
+  });
 }
 
 /** Copy the result, falling back to a selectable text box when the clipboard is blocked. */

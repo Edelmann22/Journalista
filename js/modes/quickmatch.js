@@ -9,10 +9,12 @@
  *             does not accept and the search carries on.
  *   found     the opponent's name, town and reporter, a connection check,
  *             then a three-second countdown
- *   match     QM_ROUNDS rounds of Newsroom race, using the normal room code.
- *             Between rounds both players press Ready (or the round starts
- *             by itself after QM_READY_SECS).
- *   final     rematch, find a new opponent, or leave
+ *   match     QM_ROUNDS rounds of Newsroom race or Hot seat (the player picks
+ *             on the front page), using the normal room code. Between rounds
+ *             both players press Ready (or the round starts by itself after
+ *             QM_READY_SECS).
+ *   final     the "Play again?" sheet (js/ui/again.js): rematch, which turns
+ *             into a new opponent if this one leaves, or the front page
  *
  * The player is always the host of a private room with one opponent. Today
  * that opponent is the simulated reporter in js/modes/bot.js, connected
@@ -20,6 +22,8 @@
  * quickConnect(): put both players in a matchmaking channel, let one of them
  * open a room as host, and hand the other the code. The rest of the match
  * (rounds, scoring, ready, rematch messages) already works over the network.
+ *
+ * There is no Leave button during a match: closing the app is the way out.
  *
  * Extra room messages used here: ready and rematch. Chat works as in any
  * room (js/modes/chat.js); the opponent may or may not answer.
@@ -69,9 +73,7 @@ function quickTimersClear() {
     clearInterval(qm.tick);
     clearInterval(qm.readyTick);
   }
-  $("bNew").hidden = true;
   $("bNext").disabled = false;
-  $("bLeave").textContent = "Leave room";
 }
 
 /** The opponent's name as shown on screen. */
@@ -86,6 +88,17 @@ function qmRecord() {
   store.qm = store.qm || { w: 0, l: 0, d: 0 };
   return store.qm;
 }
+
+/** The game type the player picked for quick matches: "race" or "turns" (Hot seat). */
+function qmMode() {
+  return store.qmMode === "turns" ? "turns" : "race";
+}
+
+/** The game types offered for a quick match. */
+const QM_MODES = [
+  ["race", "Race", "Everyone at once, 45 seconds"],
+  ["turns", "Hot seat", "Take turns, run out of time and lose"],
+];
 
 /** The opponent level the player picked: "any" or a key of BOT_LEVELS. */
 function qmLevel() {
@@ -117,8 +130,24 @@ function recordText(r) {
   return r.w + " won · " + r.l + " lost" + (r.d ? " · " + r.d + " drawn" : "");
 }
 
-/** The level picker, its description and the record line. Called from renderHome(). */
+/** The game type and level pickers, the level description and the record line. Called from renderHome(). */
 function renderQuickHome() {
+  const modes = $("qmModes");
+  modes.innerHTML = "";
+  QM_MODES.forEach(([key, name, blurb]) => {
+    const on = key === qmMode(),
+      b = el("button", "qm-mode" + (on ? " on" : ""));
+    b.type = "button";
+    b.setAttribute("role", "radio");
+    b.setAttribute("aria-checked", String(on));
+    b.append(el("b", null, name), el("span", null, blurb));
+    b.addEventListener("click", () => {
+      store.qmMode = key;
+      save(store);
+      renderQuickHome();
+    });
+    modes.appendChild(b);
+  });
   const sel = qmLevel(),
     box = $("qmLevels");
   box.innerHTML = "";
@@ -193,7 +222,8 @@ function quickSearch() {
   save(store);
   quickTimersClear();
   qm = { phase: "search", t0: Date.now(), timers: [], tick: 0, readyTick: 0 };
-  $("qsHead").textContent = "Finding you an opponent";
+  $("qsHead").textContent =
+    qmMode() === "turns" ? "Finding you a Hot seat opponent" : "Finding you an opponent";
   $("qsMe").src = avatarSrc(myLook(), "idle");
   $("qsMeName").textContent = name;
   $("qsCancel").hidden = false;
@@ -284,13 +314,16 @@ $("homeBtn").addEventListener("click", () => {
 
 /**
  * Three prompts for a quick match, avoiding ones from earlier quick matches
- * until every eligible prompt has been used.
+ * until every eligible prompt has been used. Hot seat needs bigger prompts.
+ *
+ * @param {"race"|"turns"} mode
  */
-function quickPick() {
-  const pool = [];
+function quickPick(mode) {
+  const need = mode === "turns" ? Math.max(MIN_ANSWERS, MIN_TURN_ANSWERS) : MIN_ANSWERS,
+    pool = [];
   CATS.forEach((c, ci) =>
     c.prompts.forEach((p, pi) => {
-      if (p.answers.length >= MIN_ANSWERS) pool.push([ci, pi]);
+      if (p.answers.length >= need) pool.push([ci, pi]);
     }),
   );
   const key = (id) => id.join(".");
@@ -325,6 +358,7 @@ function quickConnect(o) {
   });
   qm.opp = o;
   qm.bot = bot;
+  const mode = qmMode();
   mp = {
     code: "QUICK",
     tr: { local: false, bot: true, send: (m) => bot.receive(m), close: () => bot.stop() },
@@ -339,12 +373,12 @@ function quickConnect(o) {
       { id: myId, name: store.name, look: myLook(), total: 0, seen: Date.now() },
       { id: o.id, name: oppName(o), look: o.look, total: 0, seen: Date.now() },
     ],
-    settings: { ...DEFAULT_SETTINGS, mode: "race", rounds: QM_ROUNDS, secs: QM_SECS },
-    mode: "race",
+    settings: { ...DEFAULT_SETTINGS, mode, rounds: QM_ROUNDS, secs: QM_SECS },
+    mode,
     round: null,
     turn: null,
     ledger: null,
-    order: quickPick(),
+    order: quickPick(mode),
     quick: true,
   };
   qm.phase = "round";
@@ -372,18 +406,22 @@ function quickOnMessage(m) {
     if (qm.rematchMe) quickRematch();
     else {
       qm.rematchOpp = true;
-      $("bWait").textContent = name + " wants a rematch.";
-      $("bNext").textContent = "Accept rematch";
-      replay($("bNext"), "hop");
+      againSet({ text: name + " wants a rematch.", yes: ["Accept rematch", quickRematch] });
     }
     return true;
   }
   if (m.t === "bye") {
     qm.gone = true;
     if (qm.phase === "final") {
-      $("bWait").textContent = name + " left the newsroom.";
-      $("bNext").hidden = true;
-      $("bNew").hidden = false;
+      if (qm.rematchMe) {
+        // You wanted to play on: straight to the next opponent.
+        againSet({ text: name + " left. Finding you a new opponent…", yes: null, no: null });
+        qmLater(quickNewOpponent, 1600);
+      } else
+        againSet({
+          text: name + " left the newsroom.",
+          yes: ["Find a new opponent", quickNewOpponent],
+        });
     } else if (qm.phase !== "over") quickWalkover();
     return true;
   }
@@ -394,20 +432,18 @@ function quickOnMessage(m) {
 function quickBoard(m) {
   if (!qm) return;
   clearInterval(qm.readyTick);
-  $("bLeave").textContent = "Leave match";
   $("bNext").hidden = false;
   $("bNext").disabled = false;
   qm.readyMe = qm.readyOpp = qm.rematchMe = qm.rematchOpp = false;
   if (m.last) {
     qm.phase = "final";
     quickRecord(m.rows);
-    $("bNext").textContent = "Rematch";
-    $("bNew").hidden = false;
+    $("bNext").hidden = true;
     $("bWait").textContent = "";
+    askQuickAgain();
     return;
   }
   qm.phase = "board";
-  $("bNew").hidden = true;
   $("bNext").textContent = "Ready for round " + (m.n + 1);
   qm.readyLeft = QM_READY_SECS;
   readyText();
@@ -437,22 +473,44 @@ function quickGo() {
   hostNext();
 }
 
-/** The scoreboard's main button in a quick match: Ready, Rematch or Accept rematch. */
+/** The scoreboard's button between rounds in a quick match: Ready. */
 function quickNext() {
-  if (!qm) return;
-  if (qm.phase === "board") {
-    qm.readyMe = true;
-    $("bNext").disabled = true;
-    $("bNext").textContent = "You're ready";
-    if (qm.readyOpp) quickGo();
-  } else if (qm.phase === "final" && !qm.gone) {
-    if (qm.rematchOpp) return quickRematch();
-    qm.rematchMe = true;
-    send({ t: "rematch" });
-    $("bNext").disabled = true;
-    $("bNext").textContent = "Waiting for " + oppName(qm.opp) + "…";
-    $("bWait").textContent = "You asked for a rematch.";
+  if (!qm || qm.phase !== "board") return;
+  qm.readyMe = true;
+  $("bNext").disabled = true;
+  $("bNext").textContent = "You're ready";
+  if (qm.readyOpp) quickGo();
+}
+
+/** After a quick match: play again (a rematch, or a new opponent), or the front page. */
+function askQuickAgain() {
+  askAgain({
+    text: "Same opponent if " + oppName(qm.opp) + " is up for it, a new one if not.",
+    yes: ["Play again", quickPlayAgain],
+    alt: ["New opponent", quickNewOpponent],
+    no: ["Front page", () => leaveRoom()],
+  });
+}
+
+/** "Play again": accept or ask for a rematch. If the opponent leaves, a new one is found. */
+function quickPlayAgain() {
+  if (!qm || qm.phase !== "final") return;
+  if (qm.gone) return quickNewOpponent();
+  if (qm.rematchOpp) return quickRematch();
+  qm.rematchMe = true;
+  send({ t: "rematch" });
+  againSet({ text: "Asking " + oppName(qm.opp) + " for a rematch…", yes: null, alt: null });
+}
+
+/** Close this match and search for someone new, at the same level and game type. */
+function quickNewOpponent() {
+  if (mp) {
+    send({ t: "closed" });
+    closeRoom();
   }
+  quickTimersClear();
+  qm = null;
+  quickSearch();
 }
 
 /** Both want another go: same opponent, three new prompts. */
@@ -461,10 +519,11 @@ function quickRematch() {
   qm.phase = "countdown";
   qm.counted = false;
   mp.players.forEach((p) => (p.total = 0));
-  mp.order = quickPick();
+  mp.order = quickPick(mp.mode);
   mp.n = 0;
+  hideAgain();
+  $("bNext").hidden = false;
   $("bNext").disabled = true;
-  $("bNew").hidden = true;
   let n = 3;
   const step = () => {
     if (!qm || qm.phase !== "countdown") return;
@@ -495,6 +554,8 @@ function quickRecord(rows) {
 function quickWalkover() {
   cancelAnimationFrame(mraf);
   clearInterval(qm.readyTick);
+  turnsStop();
+  mp.ledger = null; // stops a pending Hot seat scoreboard
   if (mp.round) mp.round.open = false;
   mp.round = null; // stops a pending hostBoard() from replacing this screen
   mp.phase = "final";
@@ -530,12 +591,15 @@ function quickWalkover() {
   $("bPrompt").textContent = "No more rounds: your opponent has gone.";
   $("bGroups").innerHTML = "";
   $("bNext").hidden = true;
-  $("bNew").hidden = false;
   $("bWait").textContent = "";
-  $("bLeave").textContent = "Back to front page";
   show("mpboard");
   renderChat();
   stamp("Walkover", "var(--t3)");
+  askAgain({
+    text: "Keep going against someone new?",
+    yes: ["Find a new opponent", quickNewOpponent],
+    no: ["Front page", () => leaveRoom()],
+  });
 }
 
 /** The player leaves a quick match: leaving before the end counts as a loss. */
@@ -548,14 +612,3 @@ function quickAbandon() {
   quickTimersClear();
   qm = null;
 }
-
-/** "Find a new opponent" after a quick match. */
-$("bNew").addEventListener("click", () => {
-  if (mp) {
-    send({ t: "closed" });
-    closeRoom();
-  }
-  quickTimersClear();
-  qm = null;
-  quickSearch();
-});

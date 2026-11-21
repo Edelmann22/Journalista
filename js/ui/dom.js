@@ -37,6 +37,8 @@ const VIEWS = ["home", "search", "room", "mp", "turns", "mpboard", "play", "resu
  * question (home, search, room, result) switch the page back to the neutral edition.
  */
 function show(id) {
+  // Leaving the screen it was asked on closes the "Play again?" sheet (js/ui/again.js).
+  if (id !== view && typeof hideAgain === "function") hideAgain();
   view = id;
   VIEWS.forEach((s) => ($(s).hidden = s !== id));
   window.scrollTo(0, 0);

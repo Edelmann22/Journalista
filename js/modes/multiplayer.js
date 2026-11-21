@@ -270,8 +270,9 @@ function leaveRoom(msg) {
   homeMsg(msg || "");
 }
 
+// Only the lobby has a Leave button. Mid-match the only way out is closing the app;
+// the room hears "bye" from the pagehide handler below.
 $("leave").addEventListener("click", () => leaveRoom());
-$("bLeave").addEventListener("click", () => leaveRoom());
 window.addEventListener("pagehide", () => {
   if (mp) send({ t: mp.isHost ? "closed" : "bye" });
 });
@@ -490,7 +491,10 @@ document.querySelectorAll(".mode-card").forEach((b) =>
 );
 
 /** Host starts the match: pick the prompts for every round, reset totals. */
-$("startMp").addEventListener("click", () => {
+$("startMp").addEventListener("click", () => hostStartMatch());
+
+/** Start a match with the room's settings (from the lobby, or "Play again" after a final). */
+function hostStartMatch() {
   if (!mp || !mp.isHost) return;
   mp.mode = mp.settings.mode === "turns" ? "turns" : "race";
   const need = mp.mode === "turns" ? MIN_TURN_ANSWERS : MIN_ANSWERS;
@@ -505,7 +509,7 @@ $("startMp").addEventListener("click", () => {
   mp.n = 0;
   mp.players.forEach((p) => (p.total = 0));
   hostNext();
-});
+}
 
 /** Host advances to the next round and announces it. */
 function hostNext() {
@@ -844,27 +848,49 @@ function showBoard(m) {
       );
     return chip;
   });
-  $("bNext").hidden = !mp.isHost;
-  $("bNext").textContent = m.last ? "Back to the room" : "Next round";
+  $("bNext").hidden = !mp.isHost || m.last;
+  $("bNext").textContent = "Next round";
   $("bWait").textContent = mp.isHost
     ? ""
     : m.last
-      ? "The host can start another match from the room."
+      ? "The host decides when the next match starts."
       : "Waiting for the host to start the next round.";
   show("mpboard");
   renderChat();
   if (mp.quick) quickBoard(m);
+  else if (m.last) askRoomAgain();
+}
+
+/** After a room match: the host restarts or changes settings, everyone else stays or goes. */
+function askRoomAgain() {
+  const leave = ["Leave room", () => leaveRoom()];
+  if (mp.isHost)
+    askAgain({
+      text: "Same reporters, same settings, new prompts.",
+      yes: ["Play again", () => hostStartMatch()],
+      alt: ["Change settings", () => hostToLobby()],
+      no: leave,
+    });
+  else
+    askAgain({
+      text: "The host starts the next match. Stay for it?",
+      yes: ["Stay in the room", () => hideAgain()],
+      no: leave,
+    });
+}
+
+/** Host takes everyone back to the lobby after a final. */
+function hostToLobby() {
+  mp.phase = "lobby";
+  send({ t: "again" });
+  sendLobby();
+  renderRoom();
+  show("room");
 }
 
 /** Host moves on: next round, or back to the lobby after the final. */
 $("bNext").addEventListener("click", () => {
   if (mp && mp.quick) return quickNext();
   if (!mp || !mp.isHost) return;
-  if (mp.phase === "final") {
-    mp.phase = "lobby";
-    send({ t: "again" });
-    sendLobby();
-    renderRoom();
-    show("room");
-  } else hostNext();
+  if (mp.phase !== "final") hostNext();
 });
