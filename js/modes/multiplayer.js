@@ -50,7 +50,7 @@ const MODE_RULES = {
 };
 
 /** Lobby settings a new room starts with. */
-const DEFAULT_SETTINGS = { mode: "race", rounds: 5, era: "mix", secs: 45, turn: 10 };
+const DEFAULT_SETTINGS = { mode: "race", rounds: 5, era: "mix", secs: 45, turn: 15 };
 
 /**
  * The room this tab is in, or null:

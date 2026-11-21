@@ -52,7 +52,7 @@ function turnsHostRound() {
   mp.ledger = {
     n: mp.n,
     pid: mp.order[mp.n - 1],
-    secs: mp.settings.turn || 10,
+    secs: mp.settings.turn || 15,
     seats: ids.slice(shift).concat(ids.slice(0, shift)),
     active: 0,
     k: 0,
@@ -233,21 +233,34 @@ function turnsApply(m) {
     show("turns");
     replay($("tCard"), "enter");
   }
+  // You can type ahead while someone else is on the clock; only filing waits for your turn.
+  // If what you typed has just been filed (by them, or by you), the box is cleared.
   const mine = m.active === myId,
-    inp = $("tAnswer");
-  inp.disabled = !mine;
-  inp.value = "";
-  inp.placeholder = mine ? "Your turn: file an answer" : "Wait for your turn";
+    seated = (m.seats || []).includes(myId),
+    inp = $("tAnswer"),
+    typed = fresh ? "" : inp.value.trim(),
+    gone = typed && findAnswers(p, typed),
+    beaten = gone && gone.length && gone.every((h) => mp.turn.used.some((u) => u.a === h[0]));
+  if (fresh || beaten) inp.value = "";
+  inp.disabled = !seated;
+  inp.placeholder = mine
+    ? "Your turn: file an answer"
+    : seated
+      ? "Type ahead, file on your turn"
+      : "Watching";
   $("tForm").querySelector("button").disabled = !mine;
   turnsBanner();
   turnsSeats(null);
   turnsUsed(m.last);
   turnsScore();
   if (m.last) turnsCelebrate(m.last);
-  if (mine) {
-    inp.focus({ preventScroll: true });
-    replay($("tBanner"), "banner-in");
+  if (beaten && m.last && m.last.by !== myId) {
+    $("tSay").className = "say";
+    $("tSay").textContent = nameOf(m.last.by) + " filed " + m.last.a + " first. Think of another!";
+    replay(inp, "shake");
   }
+  if (seated) inp.focus({ preventScroll: true });
+  if (mine) replay($("tBanner"), "banner-in");
   cancelAnimationFrame(mraf);
   turnsTick();
 }
@@ -382,10 +395,18 @@ function turnsCelebrate(last) {
 /** Submit the active player's answer: misses are shown to everyone, hits go to the host. */
 wire("tForm", "tAnswer", () => {
   const t = mp && mp.turn;
-  if (!t || !t.open || t.active !== myId || t.pending || performance.now() > t.deadline) return;
+  if (!t || !t.open || t.pending) return;
   const inp = $("tAnswer"),
     raw = inp.value.trim(),
     say = $("tSay");
+  if (t.active !== myId) {
+    if (raw) {
+      say.className = "say";
+      say.textContent = "Ready to file on your turn.";
+    }
+    return;
+  }
+  if (performance.now() > t.deadline) return;
   if (!raw) {
     say.className = "say";
     say.textContent = "Type an answer first.";

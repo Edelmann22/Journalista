@@ -83,8 +83,10 @@ Every file starts with a comment that explains what it contains.
   totals scores. Everyone else just sends answers. Messages are documented at the top of
   `js/modes/multiplayer.js` and `js/modes/turns.js`.
 - **Game types.** In a _Newsroom race_ everyone answers the same prompt at once. In the _Hot
-  seat_ players take turns filing one answer each (5–15 seconds a turn). Each answer can be filed
-  once. Whoever runs out of time is _spiked_ (0 points for the round) and everyone else gets +100
+  seat_ players take turns filing one answer each (8–20 seconds a turn). Each answer can be filed
+  once. Turns last 15 seconds by default. You can type your next answer while someone else is
+  on the clock and file it when your turn comes; if they file that same answer first, your box is
+  cleared. Whoever runs out of time is _spiked_ (0 points for the round) and everyone else gets +100
   for surviving.
 - **Quick match.** _Find an opponent_ shows a matchmaking screen, pairs you with a reporter
   and plays three rounds of Newsroom race or Hot seat (you pick the game type on the front
